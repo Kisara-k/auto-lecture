@@ -1,13 +1,14 @@
 import os
-import time
-import importlib
 import re
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from IPython.display import Markdown, display
 from dotenv import load_dotenv
 from openai import OpenAI
-from IPython.display import Markdown, display
 
-import config
+# from config import system_prompt, user_prompt_1, user_prompt_2, clean
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
@@ -15,6 +16,8 @@ client = OpenAI(api_key=openai_key)
 
 # Reload and import configuration - directly import in production
 
+import config
+import importlib
 config = importlib.reload(config)
 globals().update({k: getattr(config, k) for k in [
     'system_prompt', 'user_prompt_1', 'user_prompt_2', 'clean']})
@@ -44,14 +47,15 @@ with open('Lectures.json', 'r', encoding='utf-8') as f:
 
 os.makedirs("outputs", exist_ok=True)
 transcripts = {}
+transcripts_lock = threading.Lock()
 
-for lecture in lectures:
+def process_lecture(lecture):
     id = lecture['index']
     title = lecture['title']
     content = lecture['content']
 
     if id > 2:
-        continue
+        return
 
     lec_prompt_1 = user_prompt_1 + title +  "\n\n" + content
 
@@ -76,10 +80,15 @@ for lecture in lectures:
         {"role": "assistant", "content": text_1},
         {"role": "user", "content": user_prompt_2},])
     
-    transcripts[id] = {
-        "title": title,
-        "content": text_2,
-    }
+    with transcripts_lock:
+        transcripts[id] = {
+            "title": title,
+            "content": text_2,
+        }
+
+with ThreadPoolExecutor() as executor:
+    target_lectures = [lecture for lecture in lectures if lecture['index'] <= 2]
+    executor.map(process_lecture, target_lectures)
 
 # Save Transcripts
 
