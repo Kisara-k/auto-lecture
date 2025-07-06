@@ -56,6 +56,8 @@ def process_lecture(lecture):
 
     if id > 2:
         return
+    
+    print(f"Processing lecture {id}: {title}")
 
     lec_prompt_1 = user_prompt_1 + title +  "\n\n" + content
 
@@ -87,8 +89,7 @@ def process_lecture(lecture):
         }
 
 with ThreadPoolExecutor() as executor:
-    target_lectures = [lecture for lecture in lectures if lecture['index'] <= 2]
-    executor.map(process_lecture, target_lectures)
+    executor.map(process_lecture, lectures)
 
 # Save Transcripts
 
@@ -98,3 +99,5 @@ transcripts_list = [
 ]
 with open("outputs/transcripts.json", "w", encoding="utf-8") as f:
     json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
+
+print("Transcripts saved to 'outputs/transcripts.json'")

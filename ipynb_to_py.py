@@ -18,7 +18,7 @@ def convert_ipynb_to_py(filename):
 
 def main():
     for file in os.listdir('.'):
-        if file.endswith('.ipynb') and file != 'INFO.ipynb':
+        if file.endswith('.ipynb') and file != 'info.ipynb':
             convert_ipynb_to_py(file)
 
 if __name__ == '__main__':
