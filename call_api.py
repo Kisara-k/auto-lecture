@@ -1,6 +1,7 @@
 import os
 import time
 import importlib
+import re
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -16,11 +17,9 @@ client = OpenAI(api_key=openai_key)
 
 config = importlib.reload(config)
 globals().update({k: getattr(config, k) for k in [
-    'system_prompt', 'user_prompt_1', 'user_prompt_2', 'lecture_content', 'clean']})
+    'system_prompt', 'user_prompt_1', 'user_prompt_2', 'clean']})
 
-user_prompt_1 += lecture_content
-
-def generate(messages, model='gpt-4.1-mini'):
+def generate(messages, model='gpt-4.1-nano'):
     start = time.time()
     completion = client.chat.completions.create(
         model=model,
@@ -37,31 +36,56 @@ def generate(messages, model='gpt-4.1-mini'):
 
     return completion.choices[0].message.content, completion
 
-text_1, completion_1 = generate([
-    {"role": "system", "content": system_prompt},
-    {"role": "user", "content": user_prompt_1}])
+import json
 
-display(Markdown(clean(text_1)))
+with open('Lectures.json', 'r', encoding='utf-8') as f:
+    lectures = json.load(f)
 
-# Save Content
 
-filepath = os.path.join("outputs", "DM 00 Introduction.md")
+os.makedirs("outputs", exist_ok=True)
+transcripts = {}
 
-with open(filepath, "w", encoding="utf-8") as f:
-    f.write(clean(text_1))
+for lecture in lectures:
+    id = lecture['index']
+    title = lecture['title']
+    content = lecture['content']
 
-text_2, completion_2 = generate([
-    {"role": "system", "content": system_prompt},
-    {"role": "user", "content": user_prompt_1},
-    {"role": "assistant", "content": text_1},
-    {"role": "user", "content": user_prompt_2},])
+    if id > 2:
+        continue
 
-display(Markdown(text_2))
+    lec_prompt_1 = user_prompt_1 + title +  "\n\n" + content
 
-# Save Content
+    # Step 1
 
-filepath = os.path.join("outputs", "DM 00 Lec.md")
+    text_1, completion_1 = generate([
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": lec_prompt_1}])
 
-with open(filepath, "w", encoding="utf-8") as f:
-    f.write(text_2)
+    # Step 2 A
+    
+    filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*]', '', title)}.md")
 
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(clean(text_1))
+
+    # Step 2 B
+    
+    text_2, completion_2 = generate([
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": lec_prompt_1},
+        {"role": "assistant", "content": text_1},
+        {"role": "user", "content": user_prompt_2},])
+    
+    transcripts[id] = {
+        "title": title,
+        "content": text_2,
+    }
+
+# Save Transcripts
+
+transcripts_list = [
+    {"index": lecture_id, "title": transcript["title"], "content": transcript["content"]}
+    for lecture_id, transcript in sorted(transcripts.items())
+]
+with open("outputs/transcripts.json", "w", encoding="utf-8") as f:
+    json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
