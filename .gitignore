@@ -1,4 +1,6 @@
 *.pdf
+Lectures.json
+outputs/
 
 # Environment variables
 .env
