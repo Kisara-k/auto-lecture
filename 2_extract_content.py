@@ -215,4 +215,3 @@ def save_content_json():
 # === Main
 if __name__ == "__main__":
     save_content_json()
-    print("PDF content extraction complete.")

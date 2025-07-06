@@ -8,19 +8,11 @@ from IPython.display import Markdown, display
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# from config import system_prompt, user_prompt_1, user_prompt_2, clean
+from config import system_prompt, user_prompt_1, user_prompt_2, clean
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
 client = OpenAI(api_key=openai_key)
-
-# Reload and import configuration - directly import in production
-
-import config
-import importlib
-config = importlib.reload(config)
-globals().update({k: getattr(config, k) for k in [
-    'system_prompt', 'user_prompt_1', 'user_prompt_2', 'clean']})
 
 def generate(messages, model='gpt-4.1-nano'):
     start = time.time()
@@ -54,8 +46,8 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
-    if id > 2:
-        return
+    # if id > 2:
+    #     return
     
     print(f"Processing lecture {id}: {title}")
 
