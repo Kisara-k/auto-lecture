@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 INPUT_PDF = 'Lectures.pdf'
 OUTPUT_JSON = 'Lectures.json'
+ZERO_INDEXED = True
 
 def extract_clean_paragraphs(text):
     lines = text.split('\n')
@@ -150,7 +151,7 @@ def extract_all_toc_entries_with_content(pdf_path):
     toc_flat = []
     for new_index, entry in enumerate(filtered_toc):
         toc_flat.append(OrderedDict([
-            ("index", new_index + 1),
+            ("index", new_index + 1 * (not ZERO_INDEXED)),
             ("level", entry["level"]),
             ("start_page", entry["start_page"]),
             ("end_page", None),

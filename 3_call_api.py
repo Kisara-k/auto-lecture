@@ -17,7 +17,7 @@ client = OpenAI(api_key=openai_key)
 total_cost = 0.0
 cost_lock = threading.Lock()
 
-def generate(messages, model='gpt-4.1-nano'):
+def generate(messages, model='gpt-4.1-mini'):
     start = time.time()
     completion = client.chat.completions.create(
         model=model,
