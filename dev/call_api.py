@@ -46,7 +46,7 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
-    if id > 3:
+    if id > 2:
         return
 
     print(f"Processing lecture {id}: {title}")
@@ -108,5 +108,3 @@ transcripts_list = [
 ]
 with open("outputs/transcripts.json", "w", encoding="utf-8") as f:
     json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
-
-print("Transcripts saved to 'outputs/transcripts.json'")

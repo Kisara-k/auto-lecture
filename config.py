@@ -41,3 +41,7 @@ Hence, create a complete comprehensive lecture that is well structured and clear
 
 Your task is to narrate the lecture in natural language spoken paragraph form. Don't prefix of suffix it with anything, just the lecture. Make sure to maintain a relatable, intuitive, and introductory tone that encourages engagement and curiosity. Don't use overly flowery language.
 """
+
+user_prompt_3 = """
+Hence, write 20 multiple choice questions that comprehensively cover this topic (each question 1 or more correct answer). Don't mark answers. Make sure to cover all the key concepts and ideas in the lecture content. Each question should be clear and concise. Include tricky and difficult questions.
+"""
