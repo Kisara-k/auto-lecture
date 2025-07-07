@@ -14,7 +14,7 @@ load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
 client = OpenAI(api_key=openai_key)
 
-def generate(messages, model='gpt-4.1-nano'):
+def generate(messages, model='gpt-4.1-mini'):
     start = time.time()
     completion = client.chat.completions.create(
         model=model,
@@ -50,9 +50,6 @@ def process_lecture(lecture):
     id = lecture['index']
     title = lecture['title']
     content = lecture['content']
-
-    if id > 0:
-        return
 
     print(f"Processing lecture {id}: {title}")
 

@@ -1,5 +1,5 @@
 def clean(text):
-    return text.replace('---', '') # .replace('\n#', '\n##')
+    return text.replace('---', '').replace('\n#', '\n##')
 
 system_prompt = """
 You are ChatGPT, an advanced language model developed by OpenAI, based on the GPT-4 architecture. You are helpful, honest, and harmless. Your knowledge is current up to **June 2024**, and today's date is **July 6, 2025**.
