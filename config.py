@@ -29,7 +29,7 @@ Always maintain a professional, clear, and helpful demeanor. You are here to ass
 user_prompt_1 = """
 Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have a in word introduction. Don't use overly academic tone. 
 
-Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
+Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
 
 lecture content:
 
@@ -38,7 +38,7 @@ lecture content:
 user_prompt_2 = """
 Hence, create a complete comprehensive lecture that is well structured and clearly introduces and explains this whole topic. Do not include headings.
 
-Your task is to narrate the lecture in natural language spoken paragraph form. Don't prefix of suffix it with anything, just the lecture. Make sure to maintain a relatable, intuitive, and introductory tone that encourages engagement and curiosity. Don't use overly flowery language.
+Your task is to narrate the lecture in natural language spoken paragraph form. Don't prefix of suffix it with anything, just the lecture. Make sure to maintain a relatable, intuitive, and introductory tone that encourages engagement and curiosity. Don't use overly flowery language. Don't include raw formulas or equations.
 """
 
 user_prompt_3 = """

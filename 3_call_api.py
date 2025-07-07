@@ -59,7 +59,7 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
-    # if not (4 <= id <= 5):
+    # if not (3 <= id <= 3):
     #     return
 
     print(f"Processing lecture {id}: {title}")
