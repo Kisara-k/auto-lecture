@@ -150,7 +150,7 @@ def extract_all_toc_entries_with_content(pdf_path):
     toc_flat = []
     for new_index, entry in enumerate(filtered_toc):
         toc_flat.append(OrderedDict([
-            ("index", new_index),
+            ("index", new_index + 1),
             ("level", entry["level"]),
             ("start_page", entry["start_page"]),
             ("end_page", None),
@@ -195,14 +195,6 @@ def save_content_json():
         return
         
     print(f"Processing: {INPUT_PDF} -> {OUTPUT_JSON}")
-    
-    # Skip if output is up-to-date
-    if os.path.exists(OUTPUT_JSON):
-        pdf_mod_time = os.path.getmtime(INPUT_PDF)
-        json_mod_time = os.path.getmtime(OUTPUT_JSON)
-        if pdf_mod_time < json_mod_time:
-            print(f"{OUTPUT_JSON} is up to date")
-            return
 
     try:
         toc_content = extract_all_toc_entries_with_content(INPUT_PDF)

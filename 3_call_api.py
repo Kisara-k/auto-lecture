@@ -51,6 +51,9 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
+    # if not (4 <= id <= 4):
+    #     return
+
     print(f"Processing lecture {id}: {title}")
 
     lec_prompt_1 = user_prompt_1 + title + "\n\n" + content

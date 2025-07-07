@@ -1,5 +1,6 @@
 import os
-import fitz  # PyMuPDF
+import fitz
+import re
 
 def strip_bookmarks(pdf_path):
     """Open a PDF, remove bookmarks by creating a new doc with all pages."""
@@ -43,7 +44,25 @@ def main():
 
         merged_doc.insert_pdf(cleaned_doc)
 
+        # Remove leading zeros from the title
+
         bookmark_title = os.path.splitext(pdf_file)[0]
+        match = re.match(r'^(\d+)(.*)', bookmark_title)
+        if match:
+            raw_number, rest = match.groups()
+            rest = rest.lstrip()
+
+            # Always strip leading zeros if the number has more than one digit and starts with zero
+            if len(raw_number) > 1 and raw_number.startswith("0"):
+                number_part = str(int(raw_number))
+            else:
+                number_part = raw_number
+
+            if not rest.startswith('.'):
+                bookmark_title = f"{number_part}. {rest}"
+            else:
+                bookmark_title = number_part + rest
+
         toc.append([1, bookmark_title, page_counter + 1])
         page_counter += cleaned_doc.page_count
 
