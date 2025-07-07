@@ -6,7 +6,6 @@ from collections import OrderedDict
 
 INPUT_PDF = 'Lectures.pdf'
 OUTPUT_JSON = 'Lectures.json'
-ZERO_INDEXED = True
 
 def extract_clean_paragraphs(text):
     lines = text.split('\n')
@@ -131,6 +130,9 @@ def normalize_text(text):
 def extract_all_toc_entries_with_content(pdf_path):
     doc = fitz.open(pdf_path)
     toc = doc.get_toc()
+
+    first_title = toc[0][1].strip()
+    ZERO_INDEXED = bool(re.match(r'^0+($|[^0-9])', first_title)) # One or more leading zeros, Followed by end of string or a non-digit character
 
     toc_entries = [
         {"level": level, "title": title, "start_page": start_page}
