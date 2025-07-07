@@ -1,6 +1,5 @@
 def clean(text):
-  # replace --- with nothing
-  return text.replace('---', '').replace('\n#', '\n##')
+    return text.replace('---', '') # .replace('\n#', '\n##')
 
 system_prompt = """
 You are ChatGPT, an advanced language model developed by OpenAI, based on the GPT-4 architecture. You are helpful, honest, and harmless. Your knowledge is current up to **June 2024**, and today's date is **July 6, 2025**.
@@ -43,5 +42,43 @@ Your task is to narrate the lecture in natural language spoken paragraph form. D
 """
 
 user_prompt_3 = """
-Hence, write 20 multiple choice questions that comprehensively cover this topic (each question 1 or more correct answer). Don't mark answers. Make sure to cover all the key concepts and ideas in the lecture content. Each question should be clear and concise. Include tricky and difficult questions.
+Hence, write 20 multiple choice questions that comprehensively cover this topic (each question having one or more correct answer). Don't mark answers. Make sure to cover all the key concepts and ideas in the lecture content. Each question should be clear and concise. Include tricky and difficult questions.
 """
+
+
+
+model_costs = {
+    "gpt-4.1":       [2.00, 0.50, 8.00],
+    "gpt-4.1-mini":  [0.40, 0.10, 1.60],
+    "gpt-4.1-nano":  [0.10, 0.03, 0.40],
+    "gpt-4o":        [2.50, 1.25, 10.00],
+    "gpt-4o-mini":   [0.15, 0.08, 0.60],
+    "gpt-o4-mini":   [1.10, 0.28, 4.40],
+}
+
+def model_usage(usage, model):
+    token_fields = ['prompt_tokens', 'cached_tokens', 'completion_tokens']
+
+    # Extract token usage from nested and direct attributes
+    flat_usage = {key: val for attr in usage.__dict__.values() if hasattr(attr, '__dict__')
+        for key, val in attr.__dict__.items() if key in token_fields and val}
+    flat_usage.update({key: val for key, val in usage.__dict__.items()
+        if key in token_fields and not hasattr(val, '__dict__') and val})
+
+    # Reorder according to token_fields
+    token_usage = {key: flat_usage.get(key, 0) for key in token_fields}
+
+    if model in model_costs:
+        prompt = token_usage['prompt_tokens']
+        cached = token_usage['cached_tokens']
+        completion = token_usage['completion_tokens']
+
+        pricing = model_costs[model]
+        cost = [
+            (prompt - cached) * pricing[0],
+            cached * pricing[1],
+            completion * pricing[2],
+        ]
+        print(f"- Cost: {sum(cost)/10**6:.4f}", end="  ")
+
+    print(f"Usage: {token_usage}")

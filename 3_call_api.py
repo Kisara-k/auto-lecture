@@ -8,7 +8,7 @@ from IPython.display import Markdown, display
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, clean
+from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, clean, model_usage
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
@@ -28,6 +28,11 @@ def generate(messages, model='gpt-4.1-nano'):
 
     elapsed = time.time() - start
     print(f"Completion took {elapsed:.2f} seconds")
+    
+    try:
+        model_usage(completion.usage, model)
+    except Exception as e:
+        print(f"Error getting model usage: {e}")
 
     return completion.choices[0].message.content, completion
 
@@ -46,7 +51,7 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
-    if id > 3:
+    if id > 0:
         return
 
     print(f"Processing lecture {id}: {title}")

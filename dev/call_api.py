@@ -8,11 +8,19 @@ from IPython.display import Markdown, display
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, clean
+# from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, clean
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
 client = OpenAI(api_key=openai_key)
+
+# Reload and import configuration - directly import in production
+
+import config
+import importlib
+config = importlib.reload(config)
+globals().update({k: getattr(config, k) for k in [
+    'system_prompt', 'user_prompt_1', 'user_prompt_2', 'user_prompt_3', 'clean']})
 
 def generate(messages, model='gpt-4.1-nano'):
     start = time.time()
@@ -28,6 +36,9 @@ def generate(messages, model='gpt-4.1-nano'):
 
     elapsed = time.time() - start
     print(f"Completion took {elapsed:.2f} seconds")
+    
+    # Print Token usage
+    print({k: v for k, v in completion.usage.__dict__.items() if v and (not hasattr(v, '__dict__') or any(getattr(v, f) for f in v.__dict__))})
 
     return completion.choices[0].message.content, completion
 
@@ -108,3 +119,5 @@ transcripts_list = [
 ]
 with open("outputs/transcripts.json", "w", encoding="utf-8") as f:
     json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
+
+print("Transcripts saved to 'outputs/transcripts.json'")
