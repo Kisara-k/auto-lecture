@@ -8,7 +8,7 @@ from IPython.display import Markdown, display
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, clean, model_usage
+from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, clean, model_usage
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
@@ -51,8 +51,8 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
-    # if not (4 <= id <= 4):
-    #     return
+    if not (4 <= id <= 4):
+        return
 
     print(f"Processing lecture {id}: {title}")
 
@@ -87,12 +87,23 @@ def process_lecture(lecture):
             {"role": "assistant", "content": text_1},
             {"role": "user", "content": user_prompt_3},])
         
+        text_4, completion_4 = generate([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": lec_prompt_1},
+            {"role": "assistant", "content": text_1},
+            {"role": "user", "content": user_prompt_3},
+            {"role": "assistant", "content": text_3},
+            {"role": "user", "content": user_prompt_4},])
         
         filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*]', '', title)}.md")
 
         with open(filepath, "w", encoding="utf-8") as f:
+            f.write("## " + title + "\n\n")
             f.write(clean(text_1))
+            f.write("\n\n" + "## " + "Questions" + "\n\n")
             f.write(clean(text_3))
+            f.write("\n\n" + "## " + "Answers" + "\n\n")
+            f.write(clean(text_4))
 
     thread_a = threading.Thread(target=step_2a)
     thread_b = threading.Thread(target=step_2b)
