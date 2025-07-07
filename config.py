@@ -71,17 +71,22 @@ def model_usage(usage, model):
     # Reorder according to token_fields
     token_usage = {key: flat_usage.get(key, 0) for key in token_fields}
 
+    cost = 0
     if model in model_costs:
         prompt = token_usage['prompt_tokens']
         cached = token_usage['cached_tokens']
         completion = token_usage['completion_tokens']
 
         pricing = model_costs[model]
-        cost = [
+        costs = [
             (prompt - cached) * pricing[0],
             cached * pricing[1],
             completion * pricing[2],
         ]
-        print(f"- Cost: {sum(cost)/10**6:.4f}", end="  ")
+
+        cost = sum(costs)/10**6
+        print(f"- Cost: {cost:.4f}", end="  ")
 
     print(f"Usage: {token_usage}")
+
+    return cost

@@ -14,7 +14,10 @@ load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
 client = OpenAI(api_key=openai_key)
 
-def generate(messages, model='gpt-4.1-mini'):
+total_cost = 0.0
+cost_lock = threading.Lock()
+
+def generate(messages, model='gpt-4.1-nano'):
     start = time.time()
     completion = client.chat.completions.create(
         model=model,
@@ -30,9 +33,14 @@ def generate(messages, model='gpt-4.1-mini'):
     print(f"Completion took {elapsed:.2f} seconds")
     
     try:
-        model_usage(completion.usage, model)
+        cost = model_usage(completion.usage, model)
     except Exception as e:
         print(f"Error getting model usage: {e}")
+        cost = 0
+
+    with cost_lock:
+        global total_cost
+        total_cost += cost
 
     return completion.choices[0].message.content, completion
 
@@ -50,6 +58,9 @@ def process_lecture(lecture):
     id = lecture['index']
     title = lecture['title']
     content = lecture['content']
+
+    # if not (4 <= id <= 5):
+    #     return
 
     print(f"Processing lecture {id}: {title}")
 
@@ -122,4 +133,5 @@ transcripts_list = [
 with open("outputs/transcripts.json", "w", encoding="utf-8") as f:
     json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
 
-print("Transcripts saved to 'outputs/transcripts.json'")
+print("\nTranscripts saved to 'outputs/transcripts.json'")
+print(f"Total API Cost: {total_cost:.4f}")
