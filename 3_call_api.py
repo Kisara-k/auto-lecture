@@ -8,7 +8,7 @@ from IPython.display import Markdown, display
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, clean, model_usage
+from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
@@ -17,7 +17,7 @@ client = OpenAI(api_key=openai_key)
 total_cost = 0.0
 cost_lock = threading.Lock()
 
-def generate(messages, model='gpt-4.1-mini'):
+def generate(messages, model='gpt-4.1-nano'):
     start = time.time()
     completion = client.chat.completions.create(
         model=model,
@@ -52,6 +52,13 @@ with open('Lectures.json', 'r', encoding='utf-8') as f:
 
 os.makedirs("outputs", exist_ok=True)
 transcripts = {}
+transcripts_path = os.path.join("outputs", "transcripts.json")
+
+if os.path.exists(transcripts_path):
+    with open(transcripts_path, "r", encoding="utf-8") as f:
+        existing_transcripts = json.load(f)
+        transcripts = {item["index"]: {"title": item["title"], "content": item["content"]} for item in existing_transcripts}
+
 transcripts_lock = threading.Lock()
 
 def process_lecture(lecture):
@@ -59,8 +66,12 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
-    # if not (3 <= id <= 3):
-    #     return
+    start, num_lecs = 12, 3
+    if not (start <= id < start + num_lecs):
+        return
+
+    if id == 13:
+        return
 
     print(f"Processing lecture {id}: {title}")
 
@@ -68,14 +79,16 @@ def process_lecture(lecture):
 
     # Step 1
 
-    text_1, completion_1 = generate([
+    text_1, _ = generate([
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": lec_prompt_1}
-    ])
+    ], model='gpt-4.1-mini')
+
+    results = {}
 
     def step_2a():
         
-        text_2, completion_2 = generate([
+        text_2, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1},
             {"role": "assistant", "content": text_1},
@@ -89,13 +102,13 @@ def process_lecture(lecture):
 
     def step_2b():
         
-        text_3, completion_3 = generate([
+        text_3, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1},
             {"role": "assistant", "content": text_1},
             {"role": "user", "content": user_prompt_3},])
         
-        text_4, completion_4 = generate([
+        text_4, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1},
             {"role": "assistant", "content": text_1},
@@ -103,22 +116,44 @@ def process_lecture(lecture):
             {"role": "assistant", "content": text_3},
             {"role": "user", "content": user_prompt_4},])
         
-        filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*]', '', title)}.md")
-
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write("## " + title + "\n\n")
-            f.write(clean(text_1))
-            f.write("\n\n" + "## " + "Questions" + "\n\n")
-            f.write(clean(text_3))
-            f.write("\n\n" + "## " + "Answers" + "\n\n")
-            f.write(clean(text_4))
+        results["text_3"] = text_3
+        results["text_4"] = text_4
+    
+    def step_2c():
+        
+        text_5, _ = generate([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": lec_prompt_1},
+            {"role": "assistant", "content": text_1},
+            {"role": "user", "content": user_prompt_5},])
+        
+        results["text_5"] = text_5
 
     thread_a = threading.Thread(target=step_2a)
     thread_b = threading.Thread(target=step_2b)
+    thread_c = threading.Thread(target=step_2c)
     thread_a.start()
     thread_b.start()
+    thread_c.start()
     thread_a.join()
     thread_b.join()
+    thread_c.join()
+    
+    filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*]', '', title)}.md")
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write("## " + title + "\n\n")
+        if "text_5" in results:
+            f.write("\n\n" + "## " + "Key Points" + "\n\n")
+            f.write(clean(results["text_5"]))
+        f.write("\n\n" + "## " + "Study Notes" + "\n\n")
+        f.write(clean(text_1))
+        if "text_3" in results:
+            f.write("\n\n" + "## " + "Questions" + "\n\n")
+            f.write(clean(results["text_3"]))
+        if "text_4" in results:
+            f.write("\n\n" + "## " + "Answers" + "\n\n")
+            f.write(clean(results["text_4"]))
 
 
 with ThreadPoolExecutor() as executor:
@@ -130,8 +165,9 @@ transcripts_list = [
     {"index": lecture_id, "title": transcript["title"], "content": transcript["content"]}
     for lecture_id, transcript in sorted(transcripts.items())
 ]
-with open("outputs/transcripts.json", "w", encoding="utf-8") as f:
+with open(transcripts_path, "w", encoding="utf-8") as f:
     json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
 
 print("\nTranscripts saved to 'outputs/transcripts.json'")
 print(f"Total API Cost: {total_cost:.4f}")
+ 

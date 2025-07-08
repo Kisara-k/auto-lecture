@@ -27,9 +27,21 @@ Always maintain a professional, clear, and helpful demeanor. You are here to ass
 """
 
 user_prompt_1 = """
-Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have a in word introduction. Don't use overly academic tone. 
+Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have an IN WORD INTRODUCTION (don't label it as introduction:). Don't use overly academic tone. 
 
-Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
+Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity (number, emoji, heading - not number, heading, emoji). Use between 3 - 10 main headings as needed. Don't use too many sub headings. Main section headings MUST follow this exact format:
+
+## 1. [Emoji] [Heading]
+
+## 2. [Emoji] [Heading]
+
+## 3. [Emoji] [Heading]
+
+## 4. [Emoji] [Heading]
+
+## 5. [Emoji] [Heading]
+
+## 6. [Emoji] [Heading]
 
 lecture content:
 
@@ -49,6 +61,19 @@ user_prompt_4 = """
 For each question, provide the correct answer(s) along with a brief explanation for why the answer(s) is/are correct.
 """
 
+user_prompt_5 = """
+State all the KEY TESTABLE FACTS here, ignore all filler and common knowledge You may use emojis for clarity. Use this formatfor key facts.
+
+### 1. [Emoji] [Fact-Topic]
+- [fact1]
+- [fact2]
+
+### 2. [Emoji] [Fact-Topic]
+- [fact1]
+- [fact2]
+- [fact3]
+
+"""
 
 model_costs = {
     "gpt-4.1":       [2.00, 0.50, 8.00],
