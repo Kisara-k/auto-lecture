@@ -83,12 +83,13 @@ def process_lecture(lecture):
     lec_prompt_1 = user_prompt_1 + title + "\n\n" + content
 
     # Step 1
-
-    if TRY_REUSE_NOTES and (id in study_notes) and ("content" in study_notes[id]):
+    
+    text_1 = None
+    if TRY_REUSE_NOTES:
         with study_notes_lock:
-            text_1 = study_notes[id]["content"]
-
-    else:
+            text_1 = study_notes.get(id, {}).get("content")
+    
+    if text_1 is None:
         text_1, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1}
