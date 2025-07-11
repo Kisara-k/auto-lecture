@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage
-from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A
+from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A, TRY_REUSE_NOTES
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
@@ -49,17 +49,22 @@ import json
 with open('Lectures.json', 'r', encoding='utf-8') as f:
     lectures = json.load(f)
 
-
 os.makedirs("outputs", exist_ok=True)
-transcripts = {}
-transcripts_path = os.path.join("outputs", "transcripts.json")
 
-if os.path.exists(transcripts_path):
-    with open(transcripts_path, "r", encoding="utf-8") as f:
-        existing_transcripts = json.load(f)
-        transcripts = {item["index"]: {"title": item["title"], "content": item["content"]} for item in existing_transcripts}
+def load_data(name):
+    data_path = os.path.join("outputs", f"{name}.json")
+    data_dict = {}
 
-transcripts_lock = threading.Lock()
+    if os.path.exists(data_path):
+        with open(data_path, "r", encoding="utf-8") as f:
+            existing_data = json.load(f)
+            data_dict = {item["index"]: {k: item[k] for k in ["title", "content"]}
+                for item in existing_data}
+
+    return data_dict, data_path, threading.Lock()
+
+transcripts, transcripts_path, transcripts_lock = load_data("transcripts")
+study_notes, study_notes_path, study_notes_lock = load_data("study_notes")
 
 def process_lecture(lecture):
     id = lecture['index']
@@ -75,12 +80,23 @@ def process_lecture(lecture):
 
     # Step 1
 
-    text_1, _ = generate([
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": lec_prompt_1}
-        ], model='gpt-4.1-mini')
+    if TRY_REUSE_NOTES and (id in study_notes) and ("content" in study_notes[id]):
+        with study_notes_lock:
+            text_1 = study_notes[id]["content"]
+
+    else:
+        text_1, _ = generate([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": lec_prompt_1}
+            ], model='gpt-4.1-mini')
+        
+        with study_notes_lock:
+            study_notes[id] = {"title": title, "content": text_1}
+
+    # Step 2
 
     results = {}
+    results_lock = threading.Lock()
 
     def step_2a():
 
@@ -94,10 +110,7 @@ def process_lecture(lecture):
             {"role": "user", "content": user_prompt_2},
         ])
         with transcripts_lock:
-            transcripts[id] = {
-                "title": title,
-                "content": text_2,
-            }
+            transcripts[id] = {"title": title, "content": text_2}
 
     def step_2b():
         
@@ -110,7 +123,8 @@ def process_lecture(lecture):
             {"role": "assistant", "content": text_1},
             {"role": "user", "content": user_prompt_3},])
 
-        results["text_3"] = text_3
+        with results_lock:
+            results["text_3"] = text_3
         
         text_4, _ = generate([
             {"role": "system", "content": system_prompt},
@@ -120,7 +134,8 @@ def process_lecture(lecture):
             {"role": "assistant", "content": text_3},
             {"role": "user", "content": user_prompt_4},])
 
-        results["text_4"] = text_4
+        with results_lock:
+            results["text_4"] = text_4
     
     def step_2c():
         
@@ -134,7 +149,8 @@ def process_lecture(lecture):
             {"role": "user", "content": user_prompt_5},
             ], model='gpt-4.1-mini')
         
-        results["text_5"] = text_5
+        with results_lock:
+            results["text_5"] = text_5
 
     threads = [
         threading.Thread(target=step_2a),
@@ -167,14 +183,18 @@ def process_lecture(lecture):
 with ThreadPoolExecutor() as executor:
     executor.map(process_lecture, lectures)
 
-# Save Transcripts
+# Save Output JSONs
 
-transcripts_list = [
-    {"index": lecture_id, "title": transcript["title"], "content": transcript["content"]}
-    for lecture_id, transcript in sorted(transcripts.items())
-]
-with open(transcripts_path, "w", encoding="utf-8") as f:
-    json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
+def save_data(data_dict, file_path):
+    data_list = [
+        {"index": id, "title": data["title"], "content": data["content"]}
+        for id, data in sorted(data_dict.items())
+    ]
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data_list, f, ensure_ascii=False, indent=2)
+
+save_data(transcripts, transcripts_path)
+save_data(study_notes, study_notes_path)
 
 print("\nLecture Processing Complete'")
 print(f"Total API Cost: {total_cost:.4f}")

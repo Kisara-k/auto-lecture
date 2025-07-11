@@ -5,6 +5,8 @@ GET_TRANSCRIPTS = False
 GET_KEY_POINTS = True
 GET_Q_AND_A = True
 
+TRY_REUSE_NOTES = False
+
 def clean(text):
     lines = text.split('\n')
     if len(lines) > 2:
