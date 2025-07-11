@@ -1,8 +1,8 @@
-START, NUM_LECS = 2, 1
+START, NUM_LECS = 0, 1
 MODEL = "gpt-4.1-mini"
 
-GET_TRANSCRIPTS = True
-GET_KEY_POINTS = False
+GET_TRANSCRIPTS = False
+GET_KEY_POINTS = True
 GET_Q_AND_A = True
 
 TRY_REUSE_NOTES = True
@@ -71,10 +71,10 @@ user_prompt_4 = """
 For each question, clearly state the correct choices, and clearly state why each choice is correct or incorrect. Make sure to carefully consider each statement, its relation to the question, and the context of the lecture. Keep explanations brief but specific. Use the following format exactly.
 
 ### X. [Question]
-A) ✓/✗ - [Short explanation]  
-B) ✓/✗ - [Short explanation]  
-C) ✓/✗ - [Short explanation]  
-D) ✓/✗ - [Short explanation]
+A) ✓/✗ [Short explanation]  
+B) ✓/✗ [Short explanation]  
+C) ✓/✗ [Short explanation]  
+D) ✓/✗ [Short explanation]
 
 **Correct:** P,Q
 """
@@ -188,12 +188,12 @@ def process_file(filepath):
 
 def load_md_to_dict(folder="outputs"):
     if not os.path.exists(folder):
-        return None
+        return {}
 
     filepaths = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(".md")]
 
     if not filepaths:
-        return None
+        return {}
 
     result_dict = {}
 
