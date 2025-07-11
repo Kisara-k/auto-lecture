@@ -1,3 +1,10 @@
+START, NUM_LECS = 12, 1
+MODEL = "gpt-4.1-mini"
+
+GET_TRANSCRIPTS = False
+GET_KEY_POINTS = True
+GET_Q_AND_A = True
+
 def clean(text):
     lines = text.split('\n')
     if len(lines) > 2:

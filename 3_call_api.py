@@ -2,13 +2,13 @@ import os
 import re
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
-from IPython.display import Markdown, display
 from dotenv import load_dotenv
 from openai import OpenAI
 
 from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage
+from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A
 
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
@@ -17,7 +17,7 @@ client = OpenAI(api_key=openai_key)
 total_cost = 0.0
 cost_lock = threading.Lock()
 
-def generate(messages, model='gpt-4.1-nano'):
+def generate(messages, model=MODEL):
     start = time.time()
     completion = client.chat.completions.create(
         model=model,
@@ -66,14 +66,10 @@ def process_lecture(lecture):
     title = lecture['title']
     content = lecture['content']
 
-    start, num_lecs = 12, 3
-    if not (start <= id < start + num_lecs):
+    if not (START <= id < START + NUM_LECS):
         return
 
-    if id == 13:
-        return
-
-    print(f"Processing lecture {id}: {title}")
+    print(f"Processing {id}: {title}")
 
     lec_prompt_1 = user_prompt_1 + title + "\n\n" + content
 
@@ -82,11 +78,14 @@ def process_lecture(lecture):
     text_1, _ = generate([
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": lec_prompt_1}
-    ], model='gpt-4.1-mini')
+        ], model='gpt-4.1-mini')
 
     results = {}
 
     def step_2a():
+
+        if not GET_TRANSCRIPTS:
+            return
         
         text_2, _ = generate([
             {"role": "system", "content": system_prompt},
@@ -102,11 +101,16 @@ def process_lecture(lecture):
 
     def step_2b():
         
+        if not GET_Q_AND_A:
+            return
+        
         text_3, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1},
             {"role": "assistant", "content": text_1},
             {"role": "user", "content": user_prompt_3},])
+
+        results["text_3"] = text_3
         
         text_4, _ = generate([
             {"role": "system", "content": system_prompt},
@@ -115,44 +119,48 @@ def process_lecture(lecture):
             {"role": "user", "content": user_prompt_3},
             {"role": "assistant", "content": text_3},
             {"role": "user", "content": user_prompt_4},])
-        
-        results["text_3"] = text_3
+
         results["text_4"] = text_4
     
     def step_2c():
+        
+        if not GET_KEY_POINTS:
+            return
         
         text_5, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1},
             {"role": "assistant", "content": text_1},
-            {"role": "user", "content": user_prompt_5},])
+            {"role": "user", "content": user_prompt_5},
+            ], model='gpt-4.1-mini')
         
         results["text_5"] = text_5
 
-    thread_a = threading.Thread(target=step_2a)
-    thread_b = threading.Thread(target=step_2b)
-    thread_c = threading.Thread(target=step_2c)
-    thread_a.start()
-    thread_b.start()
-    thread_c.start()
-    thread_a.join()
-    thread_b.join()
-    thread_c.join()
+    threads = [
+        threading.Thread(target=step_2a),
+        threading.Thread(target=step_2b),
+        threading.Thread(target=step_2c),
+    ]
+
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
     
     filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*]', '', title)}.md")
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write("## " + title + "\n\n")
         if "text_5" in results:
-            f.write("\n\n" + "## " + "Key Points" + "\n\n")
+            f.write("\n\n" + "### " + "Key Points" + "\n\n")
             f.write(clean(results["text_5"]))
-        f.write("\n\n" + "## " + "Study Notes" + "\n\n")
+        f.write("\n\n<br>\n\n" + "## " + "Study Notes" + "\n\n")
         f.write(clean(text_1))
         if "text_3" in results:
-            f.write("\n\n" + "## " + "Questions" + "\n\n")
+            f.write("\n\n<br>\n\n" + "## " + "Questions" + "\n\n")
             f.write(clean(results["text_3"]))
         if "text_4" in results:
-            f.write("\n\n" + "## " + "Answers" + "\n\n")
+            f.write("\n\n<br>\n\n" + "## " + "Answers" + "\n\n")
             f.write(clean(results["text_4"]))
 
 
@@ -168,6 +176,5 @@ transcripts_list = [
 with open(transcripts_path, "w", encoding="utf-8") as f:
     json.dump(transcripts_list, f, ensure_ascii=False, indent=2)
 
-print("\nTranscripts saved to 'outputs/transcripts.json'")
+print("\nLecture Processing Complete'")
 print(f"Total API Cost: {total_cost:.4f}")
- 
