@@ -50,9 +50,10 @@ with open('Lectures.json', 'r', encoding='utf-8') as f:
     lectures = json.load(f)
 
 os.makedirs("outputs", exist_ok=True)
+os.makedirs("outputs/json", exist_ok=True)
 
 def load_data(name):
-    data_path = os.path.join("outputs", f"{name}.json")
+    data_path = os.path.join("outputs/json", f"{name}.json")
     data_dict = {}
 
     if os.path.exists(data_path):
@@ -65,6 +66,9 @@ def load_data(name):
 
 transcripts, transcripts_path, transcripts_lock = load_data("transcripts")
 study_notes, study_notes_path, study_notes_lock = load_data("study_notes")
+key_points, key_points_path, key_points_lock = load_data("key_points")
+questions, questions_path, questions_lock = load_data("questions")
+answers, answers_path, answers_lock = load_data("answers")
 
 def process_lecture(lecture):
     id = lecture['index']
@@ -98,59 +102,68 @@ def process_lecture(lecture):
     results = {}
     results_lock = threading.Lock()
 
+    def add_to_results(key, source_dict, source_lock):
+        with source_lock:
+            item = source_dict.get(id, {}).get("content")
+        if item is not None:
+            with results_lock:
+                results[key] = item
+
     def step_2a():
 
-        if not GET_TRANSCRIPTS:
-            return
+        if GET_TRANSCRIPTS:
         
-        text_2, _ = generate([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": lec_prompt_1},
-            {"role": "assistant", "content": text_1},
-            {"role": "user", "content": user_prompt_2},
-        ])
-        with transcripts_lock:
-            transcripts[id] = {"title": title, "content": text_2}
+            text_2, _ = generate([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": lec_prompt_1},
+                {"role": "assistant", "content": text_1},
+                {"role": "user", "content": user_prompt_2},])
+
+            with transcripts_lock:
+                transcripts[id] = {"title": title, "content": text_2}
 
     def step_2b():
         
-        if not GET_Q_AND_A:
-            return
+        if GET_Q_AND_A:
         
-        text_3, _ = generate([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": lec_prompt_1},
-            {"role": "assistant", "content": text_1},
-            {"role": "user", "content": user_prompt_3},])
-
-        with results_lock:
-            results["text_3"] = text_3
+            text_3, _ = generate([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": lec_prompt_1},
+                {"role": "assistant", "content": text_1},
+                {"role": "user", "content": user_prompt_3},])
+            
+            with questions_lock:
+                questions[id] = {"title": title, "content": text_3}
+            
+            text_4, _ = generate([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": lec_prompt_1},
+                {"role": "assistant", "content": text_1},
+                {"role": "user", "content": user_prompt_3},
+                {"role": "assistant", "content": text_3},
+                {"role": "user", "content": user_prompt_4},])
+            
+            with answers_lock:
+                answers[id] = {"title": title, "content": text_4}
         
-        text_4, _ = generate([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": lec_prompt_1},
-            {"role": "assistant", "content": text_1},
-            {"role": "user", "content": user_prompt_3},
-            {"role": "assistant", "content": text_3},
-            {"role": "user", "content": user_prompt_4},])
-
-        with results_lock:
-            results["text_4"] = text_4
+        add_to_results("text_3", questions, questions_lock)
+        add_to_results("text_4", answers, answers_lock)
     
     def step_2c():
         
-        if not GET_KEY_POINTS:
-            return
+        if GET_KEY_POINTS:
         
-        text_5, _ = generate([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": lec_prompt_1},
-            {"role": "assistant", "content": text_1},
-            {"role": "user", "content": user_prompt_5},
-            ], model='gpt-4.1-mini')
+            text_5, _ = generate([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": lec_prompt_1},
+                {"role": "assistant", "content": text_1},
+                {"role": "user", "content": user_prompt_5},
+                ], model='gpt-4.1-mini')
+            
+            with key_points_lock:
+                key_points[id] = {"title": title, "content": text_5}
         
-        with results_lock:
-            results["text_5"] = text_5
+        add_to_results("text_5", key_points, key_points_lock)
 
     threads = [
         threading.Thread(target=step_2a),
@@ -195,6 +208,9 @@ def save_data(data_dict, file_path):
 
 save_data(transcripts, transcripts_path)
 save_data(study_notes, study_notes_path)
+save_data(key_points, key_points_path)
+save_data(questions, questions_path)
+save_data(answers, answers_path)
 
 print("\nLecture Processing Complete'")
 print(f"Total API Cost: {total_cost:.4f}")
