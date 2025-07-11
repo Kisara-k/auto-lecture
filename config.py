@@ -1,4 +1,8 @@
 def clean(text):
+    lines = text.split('\n')
+    if len(lines) > 2:
+        lines = lines[1:-1]  # Remove first and last line
+    text = '\n'.join(lines)
     return text.replace('---', '').replace('\n#', '\n##')
 
 system_prompt = """
@@ -27,24 +31,11 @@ Always maintain a professional, clear, and helpful demeanor. You are here to ass
 """
 
 user_prompt_1 = """
-Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have an IN WORD INTRODUCTION (don't label it as introduction:). Don't use overly academic tone. 
+Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have a clear, detailed IN WORD INTRODUCTION. Don't use overly academic tone.
 
-Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity (number, emoji, heading - not number, heading, emoji). Use between 3 - 10 main headings as needed. Don't use too many sub headings. Main section headings MUST follow this exact format:
-
-## 1. [Emoji] [Heading]
-
-## 2. [Emoji] [Heading]
-
-## 3. [Emoji] [Heading]
-
-## 4. [Emoji] [Heading]
-
-## 5. [Emoji] [Heading]
-
-## 6. [Emoji] [Heading]
+Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
 
 lecture content:
-
 """
 
 user_prompt_2 = """
@@ -54,15 +45,29 @@ Your task is to narrate the lecture in natural language spoken paragraph form. D
 """
 
 user_prompt_3 = """
-Hence, write 20 multiple choice questions that comprehensively cover this topic (each question having one or more correct answer). Don't mark answers. Make sure to cover all the key concepts and ideas in the lecture content. Each question should be clear and concise. Include tricky and difficult questions.
+Hence, write 20 multiple choice questions that comprehensively cover this topic (each question having ONE OR MORE CORRECT answer). Don't mark answers. Make sure to cover all the key concepts and ideas in the lecture content. Each question should be clear and concise. Include TRICKY and DIFFICULT questions. Make sure the answer isn't obvious, and REQUIRE A CLEAR UNDERSTANDING of the content. No need to say like "according to the lecture", as it is implied. Use the following format.
+
+### X. [Question]
+A)
+B)
+C) 
+D)
 """
 
 user_prompt_4 = """
-For each question, provide the correct answer(s) along with a brief explanation for why the answer(s) is/are correct.
+For each question, clearly state the correct choices, and clearly state why each choice is correct or incorrect. Make sure to carefully consider each statement, its relation to the question, and the context of the lecture. Keep explanations brief but specific. Use the following format exactly.
+
+### X. [Question]
+A) ✓/✗ - [Short explanation]  
+B) ✓/✗ - [Short explanation]  
+C) ✓/✗ - [Short explanation]  
+D) ✓/✗ - [Short explanation]
+
+**Correct:** P,Q
 """
 
 user_prompt_5 = """
-State all the KEY TESTABLE FACTS here, ignore all filler and common knowledge You may use emojis for clarity. Use this formatfor key facts.
+State all the KEY TESTABLE FACTS here, ignore all filler and common knowledge You may use emojis for clarity. Use this format for key facts.
 
 ### 1. [Emoji] [Fact-Topic]
 - [fact1]
