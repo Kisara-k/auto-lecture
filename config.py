@@ -1,17 +1,21 @@
-START, NUM_LECS = 12, 1
+START, NUM_LECS = 2, 1
 MODEL = "gpt-4.1-mini"
 
-GET_TRANSCRIPTS = False
-GET_KEY_POINTS = True
+GET_TRANSCRIPTS = True
+GET_KEY_POINTS = False
 GET_Q_AND_A = True
 
-TRY_REUSE_NOTES = False
+TRY_REUSE_NOTES = True
+IS_BOOK = True
 
 def clean(text):
-    lines = text.split('\n')
-    if len(lines) > 2:
-        lines = lines[1:-1]  # Remove first and last line
-    text = '\n'.join(lines)
+    if not text.strip().startswith("#"): # If chatgpt starts with a conversational message
+        lines = text.split('\n')
+        if len(lines) > 2:
+            lines = lines[1:-1]  # Remove first and last line
+        text = '\n'.join(lines)
+    if text.startswith('#'):
+        text = '#' + text
     return text.replace('---', '').replace('\n#', '\n##')
 
 system_prompt = """
@@ -89,6 +93,13 @@ State all the KEY TESTABLE FACTS here, ignore all filler and common knowledge Yo
 
 """
 
+if IS_BOOK:
+    user_prompt_1 = user_prompt_1.replace("lecture", "book")
+    # user_prompt_2 = user_prompt_2.replace("lecture", "book")
+    user_prompt_3 = user_prompt_3.replace("lecture", "book")
+    user_prompt_4 = user_prompt_4.replace("lecture", "book")
+    user_prompt_5 = user_prompt_5.replace("lecture", "book")
+
 model_costs = {
     "gpt-4.1":       [2.00, 0.50, 8.00],
     "gpt-4.1-mini":  [0.40, 0.10, 1.60],
@@ -129,3 +140,70 @@ def model_usage(usage, model):
     print(f"Usage: {token_usage}")
 
     return cost
+
+
+import os
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def extract_sections(md_text):
+    sections = {}
+
+    def unclean(text):
+        if text.startswith("##"):
+            text = text[1:]
+        return text.replace('\n##', '\n#')
+
+    def extract(key, pre, suf=r"(\n\n<br>|$)", apply_unclean=True):
+        match = re.search(pre + r"(.*?)" + suf, md_text, re.DOTALL)
+        if match:
+            content = match.group(1).replace('<br>','').strip()
+            sections[key] = unclean(content) if apply_unclean else content
+
+    # Explicitly set the suffix to the start of the next section (or fallback) if needed.
+    # extract("key_points", "### Key Points\n\n", r"(## Study Notes\n\n|\n\n<br>|$)")
+    # Note: This may fail if the next section is missing.
+    extract("title", "## ", r"\n\n", apply_unclean=False)
+    extract("key_points", "### Key Points\n\n")
+    extract("study_notes", "## Study Notes\n\n")
+    extract("questions", "## Questions\n\n")
+    extract("answers", "## Answers\n\n")
+
+    return sections
+
+def process_file(filepath):
+    filename = os.path.basename(filepath)
+    match = re.match(r"(\d+)", filename)
+    if not match:
+        return None
+
+    id_num = int(match.group(1))
+
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            md_text = f.read()
+        return id_num, extract_sections(md_text)
+    except Exception:
+        return None
+
+def load_md_to_dict(folder="outputs"):
+    if not os.path.exists(folder):
+        return None
+
+    filepaths = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(".md")]
+
+    if not filepaths:
+        return None
+
+    result_dict = {}
+
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process_file, path) for path in filepaths]
+
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                id_num, sections = result
+                result_dict[id_num] = sections
+
+    return result_dict

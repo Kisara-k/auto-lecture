@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage
+from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
 from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A, TRY_REUSE_NOTES
 
 load_dotenv()
@@ -50,10 +50,9 @@ with open('Lectures.json', 'r', encoding='utf-8') as f:
     lectures = json.load(f)
 
 os.makedirs("outputs", exist_ok=True)
-os.makedirs("outputs/json", exist_ok=True)
 
 def load_data(name):
-    data_path = os.path.join("outputs/json", f"{name}.json")
+    data_path = os.path.join("outputs", f"{name}.json")
     data_dict = {}
 
     if os.path.exists(data_path):
@@ -65,10 +64,8 @@ def load_data(name):
     return data_dict, data_path, threading.Lock()
 
 transcripts, transcripts_path, transcripts_lock = load_data("transcripts")
-study_notes, study_notes_path, study_notes_lock = load_data("study_notes")
-key_points, key_points_path, key_points_lock = load_data("key_points")
-questions, questions_path, questions_lock = load_data("questions")
-answers, answers_path, answers_lock = load_data("answers")
+
+history = load_md_to_dict()
 
 def process_lecture(lecture):
     id = lecture['index']
@@ -86,26 +83,21 @@ def process_lecture(lecture):
     
     text_1 = None
     if TRY_REUSE_NOTES:
-        with study_notes_lock:
-            text_1 = study_notes.get(id, {}).get("content")
+        text_1 = history.get(id, {}).get("study_notes")
     
     if text_1 is None:
         text_1, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1}
             ], model='gpt-4.1-mini')
-        
-        with study_notes_lock:
-            study_notes[id] = {"title": title, "content": text_1}
 
     # Step 2
 
     results = {}
     results_lock = threading.Lock()
 
-    def add_to_results(key, source_dict, source_lock):
-        with source_lock:
-            item = source_dict.get(id, {}).get("content")
+    def add_to_results(key, history_key):
+        item = history.get(id, {}).get(history_key)
         if item is not None:
             with results_lock:
                 results[key] = item
@@ -133,8 +125,7 @@ def process_lecture(lecture):
                 {"role": "assistant", "content": text_1},
                 {"role": "user", "content": user_prompt_3},])
             
-            with questions_lock:
-                questions[id] = {"title": title, "content": text_3}
+            results["text_3"] = text_3
             
             text_4, _ = generate([
                 {"role": "system", "content": system_prompt},
@@ -143,12 +134,13 @@ def process_lecture(lecture):
                 {"role": "user", "content": user_prompt_3},
                 {"role": "assistant", "content": text_3},
                 {"role": "user", "content": user_prompt_4},])
-            
-            with answers_lock:
-                answers[id] = {"title": title, "content": text_4}
+
+            results["text_4"] = text_4
         
-        add_to_results("text_3", questions, questions_lock)
-        add_to_results("text_4", answers, answers_lock)
+        else:
+        
+            add_to_results("text_3", "questions")
+            add_to_results("text_4", "answers")
     
     def step_2c():
         
@@ -161,10 +153,11 @@ def process_lecture(lecture):
                 {"role": "user", "content": user_prompt_5},
                 ], model='gpt-4.1-mini')
             
-            with key_points_lock:
-                key_points[id] = {"title": title, "content": text_5}
+            results["text_5"] = text_5
         
-        add_to_results("text_5", key_points, key_points_lock)
+        else:
+
+            add_to_results("text_5", "key_points")
 
     threads = [
         threading.Thread(target=step_2a),
@@ -176,8 +169,9 @@ def process_lecture(lecture):
         t.start()
     for t in threads:
         t.join()
+
     
-    filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*]', '', title)}.md")
+    filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:\"/\\|?*]', '', title)}.md")
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write("## " + title + "\n\n")
@@ -200,6 +194,8 @@ with ThreadPoolExecutor() as executor:
 # Save Output JSONs
 
 def save_data(data_dict, file_path):
+    if not data_dict:
+        return
     data_list = [
         {"index": id, "title": data["title"], "content": data["content"]}
         for id, data in sorted(data_dict.items())
@@ -208,10 +204,6 @@ def save_data(data_dict, file_path):
         json.dump(data_list, f, ensure_ascii=False, indent=2)
 
 save_data(transcripts, transcripts_path)
-save_data(study_notes, study_notes_path)
-save_data(key_points, key_points_path)
-save_data(questions, questions_path)
-save_data(answers, answers_path)
 
 print("\nLecture Processing Complete'")
 print(f"Total API Cost: {total_cost:.4f}")
