@@ -1,6 +1,7 @@
 *.pdf
 Lectures.json
 *outputs/
+flags.py
 
 # Environment variables
 .env

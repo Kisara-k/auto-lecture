@@ -1,12 +1,22 @@
-START, NUM_LECS = 11, 5
+# Flags
+# Copy this section to flags.py to override defaults
+
+START, NUM_LECS = 0, 100
 MODEL = "gpt-4.1-mini"
 
-GET_TRANSCRIPTS = False
+GET_TRANSCRIPTS = True
 GET_KEY_POINTS = True
 GET_Q_AND_A = True
 
 TRY_REUSE_NOTES = False
-IS_BOOK = True
+IS_BOOK = False
+
+# End Flags
+
+try:
+    from flags import *
+except ImportError:
+    pass
 
 def clean(text):
     if not text.strip().startswith("#"): # If chatgpt starts with a conversational message
