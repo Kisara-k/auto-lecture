@@ -49,6 +49,11 @@ import json
 with open('Lectures.json', 'r', encoding='utf-8') as f:
     lectures = json.load(f)
 
+lectures_sorted = sorted(lectures, key=lambda x: x['index'])
+start_index = lectures_sorted[0]['index']
+for offset, lecture in enumerate(lectures_sorted):
+    lecture['index'] = start_index + offset
+
 os.makedirs("outputs", exist_ok=True)
 
 def load_data(name):
@@ -186,6 +191,8 @@ def process_lecture(lecture):
         if "text_4" in results:
             f.write("\n\n<br>\n\n" + "## " + "Answers" + "\n\n")
             f.write(clean(results["text_4"]))
+    
+    print(f"Saved {id}: {title}")
 
 
 with ThreadPoolExecutor() as executor:

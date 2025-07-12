@@ -1,11 +1,11 @@
-START, NUM_LECS = 0, 1
+START, NUM_LECS = 11, 5
 MODEL = "gpt-4.1-mini"
 
 GET_TRANSCRIPTS = False
 GET_KEY_POINTS = True
 GET_Q_AND_A = True
 
-TRY_REUSE_NOTES = True
+TRY_REUSE_NOTES = False
 IS_BOOK = True
 
 def clean(text):
@@ -16,7 +16,9 @@ def clean(text):
         text = '\n'.join(lines)
     if text.startswith('#'):
         text = '#' + text
-    return text.replace('---', '').replace('\n#', '\n##')
+    if text.startswith('## '):
+        text = '#' + text
+    return text.replace('---', '').replace('\n#', '\n##').replace('\n## ', '\n### ')
 
 system_prompt = """
 You are ChatGPT, an advanced language model developed by OpenAI, based on the GPT-4 architecture. You are helpful, honest, and harmless. Your knowledge is current up to **June 2024**, and today's date is **July 6, 2025**.
