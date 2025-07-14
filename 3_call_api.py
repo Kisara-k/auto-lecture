@@ -17,32 +17,43 @@ client = OpenAI(api_key=openai_key)
 total_cost = 0.0
 cost_lock = threading.Lock()
 
-def generate(messages, model=MODEL):
-    start = time.time()
-    completion = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=0.3,  # Adjust for more creative or deterministic output
-        max_tokens=10000,  # Increase this if responses are getting cut off
-        top_p=0.3,
-        frequency_penalty=0,
-        presence_penalty=0
-    )
+def generate(messages, model=MODEL, max_retries=60):
+    retries = 0
+    while retries <= max_retries:
+        try:
+            start = time.time()
+            completion = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.3,  # Adjust for more creative or deterministic output
+                max_tokens=10000,  # Increase this if responses are getting cut off
+                top_p=0.3,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
 
-    elapsed = time.time() - start
-    print(f"Completion took {elapsed:.2f} seconds")
-    
-    try:
-        cost = model_usage(completion.usage, model)
-    except Exception as e:
-        print(f"Error getting model usage: {e}")
-        cost = 0
+            elapsed = time.time() - start
+            print(f"Completion took {elapsed:.2f} seconds")
+            
+            try:
+                cost = model_usage(completion.usage, model)
+            except Exception as e:
+                print(f"Error getting model usage: {e}")
+                cost = 0
 
-    with cost_lock:
-        global total_cost
-        total_cost += cost
+            with cost_lock:
+                global total_cost
+                total_cost += cost
 
-    return completion.choices[0].message.content, completion
+            return completion.choices[0].message.content, completion
+
+        except RateLimitError as e:
+            retries += 1
+            if retries <= max_retries:
+                print(f"Rate limit hit - waiting {10}s (retry {retries}/{max_retries})")
+                time.sleep(10)
+            else:
+                raise
 
 import json
 
