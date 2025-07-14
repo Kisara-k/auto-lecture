@@ -40,7 +40,7 @@ def clean(text):
         text = '#' + text
     if text.startswith('## '):
         text = '#' + text
-    return text.replace('\n---\n', '\n').replace('\n#', '\n##').replace('\n## ', '\n### ')
+    return text.replace('\n---\n', '\n').replace('\n#', '\n##').replace('\n## ', '\n### ').strip()
 
 system_prompt = """
 You are ChatGPT, an advanced language model developed by OpenAI, based on the GPT-4 architecture. You are helpful, honest, and harmless. Your knowledge is current up to **June 2024**, and today's date is **July 6, 2025**.
@@ -181,7 +181,7 @@ def extract_sections(md_text):
     def extract(key, pre, suf=r"(\n\n<br>|$)", apply_unclean=True):
         match = re.search(pre + r"(.*?)" + suf, md_text, re.DOTALL)
         if match:
-            content = match.group(1).replace('<br>','')
+            content = match.group(1).replace('<br>','').strip()
             sections[key] = unclean(content) if apply_unclean else content
 
     # Explicitly set the suffix to the start of the next section (or fallback) if needed.

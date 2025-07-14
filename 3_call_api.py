@@ -185,7 +185,6 @@ def process_lecture(lecture):
         t.start()
     for t in threads:
         t.join()
-
     
     filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:\"/\\|?*]', '', title)}.md")
 
@@ -198,13 +197,13 @@ def process_lecture(lecture):
         if "text_5" in results:
             f.write("\n\n" + "### " + "Key Points" + "\n\n")
             f.write(clean(results["text_5"]))
-        f.write("\n\n<br>\n\n" + "## " + "Study Notes" + "\n\n")
+        f.write("\n\n\n\n<br>\n\n" + "## " + "Study Notes" + "\n\n")
         f.write(clean(text_1))
         if "text_3" in results:
-            f.write("\n\n<br>\n\n" + "## " + "Questions" + "\n\n")
+            f.write("\n\n\n\n<br>\n\n" + "## " + "Questions" + "\n\n")
             f.write(clean(results["text_3"]))
         if "text_4" in results:
-            f.write("\n\n<br>\n\n" + "## " + "Answers" + "\n\n")
+            f.write("\n\n\n\n<br>\n\n" + "## " + "Answers" + "\n\n")
             f.write(clean(results["text_4"]))
     
     print(f"Saved {id}: {title}")
