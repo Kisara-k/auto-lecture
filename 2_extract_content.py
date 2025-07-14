@@ -8,7 +8,13 @@ INPUT_PDF = 'Lectures.pdf'
 OUTPUT_JSON = 'Lectures.json'
 
 def extract_clean_paragraphs(text):
-    lines = text.split('\n')
+
+    def filter_lines_with_three_letters(text_block):
+        lines = text_block.splitlines()
+        return "\n".join(line for line in lines if re.search(r'[A-Za-z]{3}', line))
+    filtered_text = filter_lines_with_three_letters(text)
+
+    lines = filtered_text.split('\n')
     cleaned_lines = []
 
     for line in lines:

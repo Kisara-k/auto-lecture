@@ -18,17 +18,29 @@ try:
 except ImportError:
     pass
 
-def clean(text):
-    if not text.strip().startswith("#"): # If chatgpt starts with a conversational message
+def remove_unwanted_lines(text):
+
+    # If chatgpt starts with a conversational message, Remove first and last line
+    if not text.strip().startswith("#"):
         lines = text.split('\n')
         if len(lines) > 2:
-            lines = lines[1:-1]  # Remove first and last line
+            lines = lines[1:-1]
         text = '\n'.join(lines)
+
+    # Remove lines that contain '# Study Note'
+    lines = text.split('\n')
+    lines = [line for line in lines if '# Study Note' not in line]
+    text = '\n'.join(lines)
+
+    return text
+
+def clean(text):
+    text = remove_unwanted_lines(text)
     if text.startswith('#'):
         text = '#' + text
     if text.startswith('## '):
         text = '#' + text
-    return text.replace('---', '').replace('\n#', '\n##').replace('\n## ', '\n### ')
+    return text.replace('\n---\n', '\n').replace('\n#', '\n##').replace('\n## ', '\n### ')
 
 system_prompt = """
 You are ChatGPT, an advanced language model developed by OpenAI, based on the GPT-4 architecture. You are helpful, honest, and harmless. Your knowledge is current up to **June 2024**, and today's date is **July 6, 2025**.
