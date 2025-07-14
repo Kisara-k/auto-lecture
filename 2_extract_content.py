@@ -208,7 +208,10 @@ def save_content_json():
     try:
         toc_content = extract_all_toc_entries_with_content(INPUT_PDF)
         with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
-            json.dump(toc_content, f, indent=2, ensure_ascii=False)
+            json.dump(
+                [{k: v for k, v in entry.items() if k not in ("level", "start_page", "end_page")} for entry in toc_content],
+                f, ensure_ascii=False, indent=2
+            )
         print(f"Saved: {OUTPUT_JSON}")
     except Exception as e:
         print(f"Error processing {INPUT_PDF}: {str(e)}")
