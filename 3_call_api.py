@@ -68,7 +68,7 @@ def load_data(name):
 
     return data_dict, data_path, threading.Lock()
 
-transcripts, transcripts_path, transcripts_lock = load_data("transcripts")
+transcripts, transcripts_path, transcripts_lock = load_data("Transcripts")
 
 history = load_md_to_dict()
 
