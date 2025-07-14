@@ -181,7 +181,7 @@ def extract_sections(md_text):
     def extract(key, pre, suf=r"(\n\n<br>|$)", apply_unclean=True):
         match = re.search(pre + r"(.*?)" + suf, md_text, re.DOTALL)
         if match:
-            content = match.group(1).replace('<br>','').strip()
+            content = match.group(1).replace('<br>','')
             sections[key] = unclean(content) if apply_unclean else content
 
     # Explicitly set the suffix to the start of the next section (or fallback) if needed.

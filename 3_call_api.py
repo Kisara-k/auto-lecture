@@ -190,7 +190,11 @@ def process_lecture(lecture):
     filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:\"/\\|?*]', '', title)}.md")
 
     with open(filepath, "w", encoding="utf-8") as f:
-        f.write("## " + title + "\n\n")
+        def clean_title(title):
+            return re.sub(r'^0*(\d+)\s+', lambda m: (m.group(1) if m.group(1) != "0" else "0") + ' ', title, count=1)
+        f.write("## " + clean_title(title) + "\n\n")
+        f.write("[Study Notes](#study-notes)\n\n")
+        f.write("[Questions](#questions)\n\n")
         if "text_5" in results:
             f.write("\n\n" + "### " + "Key Points" + "\n\n")
             f.write(clean(results["text_5"]))
