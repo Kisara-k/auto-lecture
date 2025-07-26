@@ -3,6 +3,7 @@ import json
 import re
 import os
 from collections import OrderedDict
+from difflib import SequenceMatcher
 
 INPUT_PDF = 'Lectures.pdf'
 OUTPUT_JSON = 'Lectures.json'
@@ -33,7 +34,7 @@ def insert_period_after_title_match(title, content, max_scan=None, start_offset=
     title_letters = [c for c in title.lower() if c.isalpha()]
     match_length = 0
     content_letter_index = 0
-    i = start_offset
+    i = start_offset 
 
     while match_length < len(title_letters) and i < len(content):
         c = content[i]
@@ -133,6 +134,29 @@ def normalize_text(text):
 
     return text
 
+
+def is_similar_content(prev_content, current_content, similarity_threshold=1):
+
+    if not prev_content or not current_content:
+        return False
+        
+    # If one is significantly longer than the other, they're not similar
+    len_ratio = min(len(prev_content), len(current_content)) / max(len(prev_content), len(current_content))
+    if len_ratio < 0.8:  # More than 20% length difference
+        return False
+    
+    # If they are exactly the same
+    if prev_content.strip() == current_content.strip():
+        return True
+
+    if similarity_threshold >= 1:
+        return False
+    
+    # Calculate similarity using sequence matching
+    similarity = SequenceMatcher(None, prev_content, current_content).ratio()
+    
+    return similarity >= similarity_threshold
+
 def extract_all_toc_entries_with_content(pdf_path):
     doc = fitz.open(pdf_path)
     toc = doc.get_toc()
@@ -172,9 +196,19 @@ def extract_all_toc_entries_with_content(pdf_path):
         current["end_page"] = next_start - 1
 
         chapter_text = ""
+        previous_page_content = None
+        
         for page_num in range(current["start_page"], next_start):
             page = doc.load_page(page_num - 1)
-            chapter_text += page.get_text()
+            current_page_text = page.get_text()
+            current_page_cleaned = extract_clean_paragraphs(current_page_text)
+            
+            # Skip if this page is very similar to the previous page
+            if previous_page_content and is_similar_content(previous_page_content, current_page_cleaned):
+                continue
+                
+            chapter_text += current_page_text
+            previous_page_content = current_page_cleaned
 
         cleaned_content = extract_clean_paragraphs(chapter_text)
         fixed_content = insert_period_after_title_match(current["title"], cleaned_content)
@@ -192,7 +226,7 @@ def extract_all_toc_entries_with_content(pdf_path):
             for parent in toc_flat:
                 if parent["start_page"] <= page <= parent["end_page"]:
                     updated_content = insert_period_after_title_match(entry["title"], parent["content"])
-                    updated_content = normalize_text(updated_content)  # <-- Apply fix here too
+                    updated_content = normalize_text(updated_content)
                     parent["content"] = updated_content
                     break
 
