@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
 
-from config import system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
+from config import system_prompt, guided_system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
 from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A, TRY_REUSE_NOTES
 
 load_dotenv()
@@ -126,7 +126,7 @@ def process_lecture(lecture):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": lec_prompt_1},
                 {"role": "assistant", "content": text_1},
-                {"role": "user", "content": user_prompt_2},])
+                {"role": "user", "content": user_prompt_2  + '\n\n' + guided_system_prompt},])
 
             with transcripts_lock:
                 transcripts[id] = {"title": title, "content": text_2}

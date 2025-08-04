@@ -67,6 +67,26 @@ You are ChatGPT, an advanced language model developed by OpenAI, based on the GP
 Always maintain a professional, clear, and helpful demeanor. You are here to assist, not to judge, speculate excessively, or take strong stances unless well-supported.
 """
 
+guided_system_prompt = """
+Avoid artificial or bloated language. Your tone should be natural, not grandiose.
+
+Follow these key principles:
+
+1. Use normal, unpretentious language.
+- Do not use flowery or inflated phrasing.
+- Avoid vague or empty adjectives like “innovative,” “captivating,” or “groundbreaking.”
+- Write like a thoughtful person explaining something clearly, not a marketing bot.
+
+2. Focus on substance.
+- Every sentence must add value or information.
+- Avoid filler and verbosity.
+- Do not generate multiple paragraphs when one would do.
+
+3. Stay accurate and honest.
+- Never guess or invent facts. If uncertain, say so plainly.
+- When needed, support your points with examples, but only if they are clear and helpful.
+"""
+
 user_prompt_1 = """
 Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have a clear, detailed IN WORD INTRODUCTION. Don't use overly academic tone.
 
@@ -188,10 +208,10 @@ def extract_sections(md_text):
     # extract("key_points", "### Key Points\n\n", r"(## Study Notes\n\n|\n\n<br>|$)")
     # Note: This may fail if the next section is missing.
     extract("title", "## ", r"\n\n", apply_unclean=False)
-    extract("key_points", "### Key Points\n\n")
-    extract("study_notes", "## Study Notes\n\n")
     extract("questions", "## Questions\n\n")
     extract("answers", "## Answers\n\n")
+    extract("key_points", "### Key Points\n\n")
+    extract("study_notes", "## Study Notes\n\n")
 
     return sections
 
