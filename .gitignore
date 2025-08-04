@@ -1,7 +1,14 @@
 *.pdf
 Lectures.json
-*outputs/
 flags.py
+
+# Ignore all folders in the root directory except for specific directories
+/*/
+!/dev/
+/dev/*
+!/outputs_example/
+/outputs_example/*
+!/slides/*.txt
 
 # Environment variables
 .env
