@@ -186,25 +186,27 @@ def process_lecture(lecture):
     for t in threads:
         t.join()
     
-    filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:\"/\\|?*]', '', title)}.md")
+    filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', title)}.md")
 
     with open(filepath, "w", encoding="utf-8") as f:
         def clean_title(title):
             return re.sub(r'^0*(\d+)\s+', lambda m: (m.group(1) if m.group(1) != "0" else "0") + ' ', title, count=1)
+        SEP = "\n\n\n\n<br>\n\n"
         f.write("## " + clean_title(title) + "\n\n")
+        f.write("[Key Points](#key-points)\n\n")
         f.write("[Study Notes](#study-notes)\n\n")
-        f.write("[Questions](#questions)\n\n")
-        if "text_5" in results:
-            f.write("\n\n" + "### " + "Key Points" + "\n\n")
-            f.write(clean(results["text_5"]))
-        f.write("\n\n\n\n<br>\n\n" + "## " + "Study Notes" + "\n\n")
-        f.write(clean(text_1))
+        # f.write("[Questions](#questions)\n\n")
         if "text_3" in results:
-            f.write("\n\n\n\n<br>\n\n" + "## " + "Questions" + "\n\n")
+            f.write("## " + "Questions" + "\n\n")
             f.write(clean(results["text_3"]))
         if "text_4" in results:
-            f.write("\n\n\n\n<br>\n\n" + "## " + "Answers" + "\n\n")
+            f.write(SEP + "## " + "Answers" + "\n\n")
             f.write(clean(results["text_4"]))
+        if "text_5" in results:
+            f.write(SEP + "## " + "Key Points" + "\n\n")
+            f.write(clean(results["text_5"]))
+        f.write(SEP + "## " + "Study Notes" + "\n\n")
+        f.write(clean(text_1))
     
     print(f"Saved {id}: {title}")
 
