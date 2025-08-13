@@ -3,30 +3,34 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-green.svg)](https://openai.com)
 
-An intelligent pipeline that transforms PDF lecture slides into comprehensive educational materials including study notes, transcripts, questions, and key points using OpenAI's GPT models.
+A pipeline that transforms PDF lecture slides into comprehensive educational materials including study notes, transcripts, questions, and key points using OpenAI's GPT models.
 
-## 🎯 Overview
+Use Case Examples:
+[Course Notes](https://github.com/Kisara-k/course-notes)
+[S5 Lectures](https://github.com/Kisara-k/s5-lectures)
+
+## Overview
 
 Auto-Lecture is a three-stage automated system that:
 1. **Merges** multiple PDF slide files into a single organized document
 2. **Extracts** structured content from PDFs with intelligent text processing
 3. **Generates** comprehensive educational materials using AI
 
-## 🚀 Features
+## Features
 
-- **📚 PDF Processing**: Automatically merge and organize multiple PDF slide files
-- **🔍 Smart Content Extraction**: Extract clean, structured text from PDFs with duplicate detection
-- **🤖 AI-Powered Generation**: Generate multiple types of educational content:
+- **PDF Processing**: Automatically merge and organize multiple PDF slide files
+- **Smart Content Extraction**: Extract clean, structured text from PDFs with duplicate detection
+- **AI-Powered Generation**: Generate multiple types of educational content:
   - Detailed study notes with emoji-enhanced headings
   - Natural language lecture transcripts
   - Comprehensive multiple-choice questions with explanations
   - Key testable facts and points
-- **⚡ Concurrent Processing**: Multi-threaded execution for faster processing
-- **💰 Cost Tracking**: Built-in API cost monitoring and optimization
-- **🔧 Flexible Configuration**: Easily customizable prompts and settings
-- **📁 Organized Output**: Clean, structured markdown files for easy consumption
+- **Concurrent Processing**: Multi-threaded execution for faster processing
+- **Cost Tracking**: Built-in API cost monitoring and optimization
+- **Flexible Configuration**: Easily customizable prompts and settings
+- **Organized Output**: Clean, structured markdown files for easy consumption
 
-## 📋 Requirements
+## Requirements
 
 ### Dependencies
 ```
@@ -41,7 +45,7 @@ Create a `.env` file in the project root:
 OPENAI_KEY=your_openai_api_key_here
 ```
 
-## 🛠️ Installation
+## Installation
 
 1. **Clone the repository**:
    ```bash
@@ -62,7 +66,7 @@ OPENAI_KEY=your_openai_api_key_here
    - Place PDF files in the `slides/` directory
    - Files should be named with numeric prefixes (e.g., `01 Introduction.pdf`, `02 Advanced Topics.pdf`)
 
-## 🎮 Usage
+## Usage
 
 ### Quick Start
 Run the complete pipeline:
@@ -105,7 +109,7 @@ TRY_REUSE_NOTES = False   # Reuse existing notes to save API calls
 IS_BOOK = False           # Adjust prompts for book content vs lectures
 ```
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 auto-lecture/
@@ -122,7 +126,7 @@ auto-lecture/
 └── README.md            # This file
 ```
 
-## 🔄 Pipeline Stages
+## Pipeline Stages
 
 ### Stage 1: PDF Merging (`1_merge_slides.py`)
 - Combines multiple PDF files from `slides/` directory
@@ -158,30 +162,30 @@ auto-lecture/
 
 **Generated Content Types**:
 
-1. **📝 Study Notes**: Detailed, well-structured notes with:
+1. **Study Notes**: Detailed, well-structured notes with:
    - Emoji-enhanced headings
    - Clear explanations in accessible language
    - Numbered main sections
    - Comprehensive coverage of all topics
 
-2. **🎤 Lecture Transcripts**: Natural language spoken-form lectures:
+2. **Lecture Transcripts**: Natural language spoken-form lectures:
    - Conversational, engaging tone
    - Clear topic progression
    - Introductory-level explanations
 
-3. **❓ Questions & Answers**: Comprehensive assessment materials:
+3. **Questions & Answers**: Comprehensive assessment materials:
    - 20 multiple-choice questions per lecture
    - Challenging questions requiring deep understanding
    - Detailed explanations for each answer choice
    - Correct answer identification
 
-4. **🎯 Key Points**: Essential testable facts:
+4. **Key Points**: Essential testable facts:
    - Structured bullet points
    - Emoji categorization
    - Focus on testable content
    - Organized by topic areas
 
-## 🎛️ Advanced Configuration
+## Advanced Configuration
 
 ### Custom Prompts
 The system uses sophisticated prompts defined in `config.py`:
@@ -209,7 +213,7 @@ Supported models with pricing (per 1M tokens):
 - **Content Reuse**: Option to reuse existing notes (`TRY_REUSE_NOTES`)
 - **Selective Generation**: Toggle individual content types
 
-## 📊 Output Format
+## Output Format
 
 Generated files follow this structure:
 
@@ -232,7 +236,7 @@ Generated files follow this structure:
 [Detailed explanations for each question]
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -256,7 +260,7 @@ Generated files follow this structure:
 - Use `TRY_REUSE_NOTES` to avoid regenerating existing content
 - Process smaller batches using `START` and `NUM_LECS` settings
 
-## 📈 Cost Estimation
+## Cost Estimation
 
 Typical costs per lecture (using gpt-4.1-mini):
 - Study Notes: ~$0.05-0.10
@@ -267,7 +271,7 @@ Typical costs per lecture (using gpt-4.1-mini):
 
 **Total per lecture**: ~$0.14-0.32
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -275,17 +279,17 @@ Typical costs per lecture (using gpt-4.1-mini):
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [PyMuPDF](https://pymupdf.readthedocs.io/) for PDF processing
 - [OpenAI](https://openai.com/) for GPT models
 - Contributors and users providing feedback
 
-## 📞 Support
+## Support
 
 For issues, questions, or contributions:
 - Open an issue on GitHub
