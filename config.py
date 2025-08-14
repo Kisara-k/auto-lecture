@@ -208,10 +208,10 @@ def extract_sections(md_text):
     # extract("key_points", "### Key Points\n\n", r"(## Study Notes\n\n|\n\n<br>|$)")
     # Note: This may fail if the next section is missing.
     extract("title", "## ", r"\n\n", apply_unclean=False)
-    extract("questions", "## Questions\n\n")
-    extract("answers", "## Answers\n\n")
     extract("key_points", "### Key Points\n\n")
     extract("study_notes", "## Study Notes\n\n")
+    extract("questions", "## Questions\n\n")
+    extract("answers", "## Answers\n\n")
 
     return sections
 
