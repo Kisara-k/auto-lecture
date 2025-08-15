@@ -19,10 +19,10 @@ Auto-Lecture is a three-stage automated system that:
 
 ## Features
 
-- **📚 PDF Processing**: Automatically merge and organize multiple PDF slide files
-- **🔍 Smart Content Extraction**: Extract clean, structured text from PDFs with duplicate detection
-- **🤖 AI-Powered Generation**: Generate multiple types of educational content:
-  - Detailed study notes with emoji-enhanced headings
+- **PDF Processing**: Automatically merge and organize multiple PDF slide files
+- **Smart Content Extraction**: Extract clean, structured text from PDFs with duplicate detection
+- **AI-Powered Generation**: Generate multiple types of educational content:
+  - Detailed study notes with enhanced headings
   - Natural language lecture transcripts
   - Comprehensive multiple-choice questions with explanations
   - Key testable facts and points
@@ -31,7 +31,14 @@ Auto-Lecture is a three-stage automated system that:
 - **Flexible Configuration**: Easily customizable prompts and settings
 - **Organized Output**: Clean, structured markdown files for easy consumption
 
-## 📋 Requirements
+## Web App
+
+A web application for Auto-Lecture is available at [https://github.com/Kisara-k/auto-lecture-app](https://github.com/Kisara-k/auto-lecture-app).
+
+![Auto-Lecture Web App Demo 1](https://github.com/Kisara-k/auto-lecture-app/raw/main/assets/demo/Screenshot_83.png)
+![Auto-Lecture Web App Demo 2](https://github.com/Kisara-k/auto-lecture-app/raw/main/assets/demo/Screenshot_85.png)
+
+## Requirements
 
 ### Dependencies
 
@@ -49,7 +56,7 @@ Create a `.env` file in the project root:
 OPENAI_KEY=your_openai_api_key_here
 ```
 
-## 🛠️ Installation
+## Installation
 
 1. **Clone the repository**:
 
@@ -177,24 +184,24 @@ auto-lecture/
 
 **Generated Content Types**:
 
-1. **📝 Study Notes**: Detailed, well-structured notes with:
+1. **Study Notes**: Detailed, well-structured notes with:
    - Emoji-enhanced headings
    - Clear explanations in accessible language
    - Numbered main sections
    - Comprehensive coverage of all topics
 
-2. **🎤 Lecture Transcripts**: Natural language spoken-form lectures:
+2. **Lecture Transcripts**: Natural language spoken-form lectures:
    - Conversational, engaging tone
    - Clear topic progression
    - Introductory-level explanations
 
-3. **❓ Questions & Answers**: Comprehensive assessment materials:
+3. **Questions & Answers**: Comprehensive assessment materials:
    - 20 multiple-choice questions per lecture
    - Challenging questions requiring deep understanding
    - Detailed explanations for each answer choice
    - Correct answer identification
 
-4. **🎯 Key Points**: Essential testable facts:
+4. **Key Points**: Essential testable facts:
    - Structured bullet points
    - Emoji categorization
    - Focus on testable content
