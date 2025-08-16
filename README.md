@@ -35,8 +35,9 @@ Auto-Lecture is a three-stage automated system that:
 
 A web application for Auto-Lecture is available at [https://github.com/Kisara-k/auto-lecture-app](https://github.com/Kisara-k/auto-lecture-app).
 
-![Auto-Lecture Web App Demo 1](https://github.com/Kisara-k/auto-lecture-app/raw/main/assets/demo/Screenshot_83.png)
-![Auto-Lecture Web App Demo 2](https://github.com/Kisara-k/auto-lecture-app/raw/main/assets/demo/Screenshot_85.png)
+![Auto-Lecture Web App Demo 1](https://github.com/Kisara-k/auto-lecture-app/raw/main/assets/demo/01.png)
+![Auto-Lecture Web App Demo 2](https://github.com/Kisara-k/auto-lecture-app/raw/main/assets/demo/02.png)
+![Auto-Lecture Web App Demo 3](https://github.com/Kisara-k/auto-lecture-app/raw/main/assets/demo/03.png)
 
 ## Requirements
 
