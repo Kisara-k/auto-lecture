@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
 
-from config import system_prompt, guided_system_prompt, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
+from config import system_prompt, guided_system_prompt, interview_prefix, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
 from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A, TRY_REUSE_NOTES
 
 load_dotenv()
@@ -16,6 +16,8 @@ client = OpenAI(api_key=openai_key)
 
 total_cost = 0.0
 cost_lock = threading.Lock()
+
+# user_prompt_1 = interview_prefix
 
 def generate(messages, model=MODEL, max_retries=120):
     retries = 0

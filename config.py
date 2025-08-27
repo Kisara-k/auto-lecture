@@ -87,10 +87,19 @@ Follow these key principles:
 - When needed, support your points with examples, but only if they are clear and helpful.
 """
 
+
+interview_prefix="""
+Create a detailed, introductory understandable study note based on the following interview questions. It should start from the basics and work its way up to being able to answer every one of the questions. Make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have a clear, detailed IN WORD INTRODUCTION. Don't use overly academic tone.
+
+Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
+
+interview questions:
+"""
+
 user_prompt_1 = """
 Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have a clear, detailed IN WORD INTRODUCTION. Don't use overly academic tone.
 
-Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
+Be VERY DETAILED in each of your explanations. You must not leave anything out, that will be helpful to know in an interview. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
 
 lecture content:
 """
