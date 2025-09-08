@@ -10,6 +10,9 @@ from openai import OpenAI, RateLimitError
 from config import system_prompt, guided_system_prompt, interview_prefix, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
 from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A, TRY_REUSE_NOTES
 
+# QUALITY_MODEL = "gpt-4.1-mini"
+QUALITY_MODEL = MODEL
+
 load_dotenv()
 openai_key = os.getenv('OPENAI_KEY')
 client = OpenAI(api_key=openai_key)
@@ -107,7 +110,7 @@ def process_lecture(lecture):
         text_1, _ = generate([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": lec_prompt_1}
-            ], model='gpt-4.1-mini')
+            ], model=QUALITY_MODEL)
 
     # Step 2
 
@@ -169,7 +172,7 @@ def process_lecture(lecture):
                 {"role": "user", "content": lec_prompt_1},
                 {"role": "assistant", "content": text_1},
                 {"role": "user", "content": user_prompt_5},
-                ], model='gpt-4.1-mini')
+                ], model=QUALITY_MODEL)
             
             results["text_5"] = text_5
         
@@ -188,7 +191,20 @@ def process_lecture(lecture):
     for t in threads:
         t.join()
     
-    filepath = os.path.join("outputs", f"{id:02d} {re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', title)}.md")
+    def strip_leading_number_part(s):
+        # 1. Title -> Title
+        parts = s.split(' ', 1)
+        if len(parts) == 2 and parts[1] and parts[1][0].isdigit():
+            sub = parts[1].split(' ', 1)
+            if len(sub) == 2:
+                return sub[1]
+            else:
+                return ''
+        return parts[1] if len(parts) == 2 else s
+
+    safe_title = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', title)
+    filename_title = strip_leading_number_part(safe_title)
+    filepath = os.path.join("outputs", f"{id:02d} {filename_title}.md")
 
     with open(filepath, "w", encoding="utf-8") as f:
         def clean_title(title):
@@ -205,7 +221,8 @@ def process_lecture(lecture):
         f.write(clean(text_1))
     
     if "text_3" in results:
-        q_filepath = os.path.join("outputs", f"q {id:02d} {re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', title)}.md")
+        q_filename_title = strip_leading_number_part(safe_title)
+        q_filepath = os.path.join("outputs", f"q {id:02d} {q_filename_title}.md")
         with open(q_filepath, "w", encoding="utf-8") as f:
             f.write("## " + clean_title(title) + "\n\n")
             f.write("## " + "Questions" + "\n\n")
