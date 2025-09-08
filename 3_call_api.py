@@ -62,8 +62,13 @@ def generate(messages, model=MODEL, max_retries=120):
 
 import json
 
-with open('Lectures.json', 'r', encoding='utf-8') as f:
-    lectures = json.load(f)
+reuse_lectures_path = os.path.join("outputs", "Lectures.json") if TRY_REUSE_NOTES else "Lectures.json"
+if TRY_REUSE_NOTES and os.path.exists(reuse_lectures_path):
+    with open(reuse_lectures_path, 'r', encoding='utf-8') as f:
+        lectures = json.load(f)
+else:
+    with open('Lectures.json', 'r', encoding='utf-8') as f:
+        lectures = json.load(f)
 
 lectures_sorted = sorted(lectures, key=lambda x: x['index'])
 start_index = lectures_sorted[0]['index']

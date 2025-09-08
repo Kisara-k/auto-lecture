@@ -257,7 +257,8 @@ def extract_sections(md_text):
 
 def process_file(filepath):
     filename = os.path.basename(filepath)
-    match = re.match(r"(\d+)", filename)
+    # Handle both regular files (e.g., "01 File.md") and q-prefixed files (e.g., "q 01 File.md")
+    match = re.match(r"(?:q\s+)?(\d+)", filename)
     if not match:
         return None
 
@@ -288,6 +289,10 @@ def load_md_to_dict(folder="outputs"):
             result = future.result()
             if result:
                 id_num, sections = result
-                result_dict[id_num] = sections
+                if id_num in result_dict:
+                    # Merge sections (assuming no overlap as stated)
+                    result_dict[id_num].update(sections)
+                else:
+                    result_dict[id_num] = sections
 
     return result_dict
