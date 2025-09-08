@@ -34,8 +34,15 @@ def remove_unwanted_lines(text):
 
     return text
 
+def replace_text(text):
+    text = re.sub(r'[ ]*\\\[', r'\n$$', text)
+    text = re.sub(r'[ ]*\\\]', r'$$\n', text)
+    text = re.sub(r'\\[()]', r'$', text)
+    return text
+
 def clean(text):
     text = remove_unwanted_lines(text)
+    text = replace_text(text)
     if text.startswith('#'):
         text = '#' + text
     if text.startswith('## '):
