@@ -6,8 +6,12 @@
 A pipeline that transforms PDF lecture slides into comprehensive educational materials including study notes, transcripts, questions, and key points using OpenAI's GPT models.
 
 Use Case Examples:
+
 [Course Notes](https://github.com/Kisara-k/course-notes)
+
 [S5 Lectures](https://github.com/Kisara-k/s5-lectures)
+
+[S6 Lectures](https://github.com/Kisara-k/s6-lectures)
 
 ## Overview
 
