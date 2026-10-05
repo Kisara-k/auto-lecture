@@ -11,6 +11,8 @@ GET_Q_AND_A = True
 TRY_REUSE_NOTES = False
 IS_BOOK = False
 
+NUM_QUESTIONS = 8
+
 # End Flags
 
 try:
@@ -37,7 +39,7 @@ def remove_unwanted_lines(text):
 def replace_text(text):
     text = re.sub(r'[ ]*\\\[', r'\n$$', text)
     text = re.sub(r'[ ]*\\\]', r'$$\n', text)
-    text = re.sub(r'\\[()]', r'$', text)
+    text = re.sub(r'\\\( ?| ?\\\)', '$', text)
     return text
 
 def clean(text):
@@ -50,7 +52,7 @@ def clean(text):
     return text.replace('\n---\n', '\n').replace('\n#', '\n##').replace('\n## ', '\n### ').strip()
 
 system_prompt = """
-You are ChatGPT, an advanced language model developed by OpenAI, based on the GPT-4 architecture. You are helpful, honest, and harmless. Your knowledge is current up to **June 2024**, and today's date is **July 6, 2025**.
+You are ChatGPT, an advanced language model developed by OpenAI, based on the GPT-4 architecture. You are helpful and honest.
 
 **Your objectives are:**
 
@@ -103,10 +105,50 @@ Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanation
 interview questions:
 """
 
+research_prefix = """
+Create a detailed, introductory understandable study note based on the following research paper. It should start from the basics and work its way up to being able to read, understand, implement, and critically evaluate the paper. Make sure it's well organized, ADD CONTENT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the paper. Structured like a note, not just a list of points. Each section must have a clear, detailed IN WORD INTRODUCTION. Don't use overly academic tone.
+
+Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
+
+Special requirements for research-paper notes (follow these in addition to the above):
+
+Top matter: for each paper list metadata (Title; Authors; Year; Venue; DOI/URL if available) and a 1–2 sentence TL;DR summarizing the core contribution.
+
+If multiple papers are provided, include an explicit SYNTHESIS section that compares and contrasts them (a short comparison table or clear bullet comparison) highlighting agreements, contradictions, and open problems.
+
+Prerequisites & background: a short “what you should already know” checklist and short refreshers on necessary background concepts.
+
+Problem & intuition: give an intuitive, in-words explanation of the problem and why it matters, then state the formal problem and notation. Define and explain every symbol used.
+
+Math & derivations: reproduce key equations and derivations step-by-step; where algebra or calculus is used, walk through the steps and explain what each step means in words.
+
+Methods & algorithms: present the method(s) in readable algorithmic form (pseudocode) and include a small worked numeric toy example that shows the algorithm’s steps on concrete numbers.
+
+Experiments & results: explain datasets, splits/preprocessing, baselines, evaluation metrics, hyperparameters, and how to interpret the main tables/figures. Call out any surprising or subtle experimental details.
+
+Reproducibility checklist: explicitly list what is needed to reproduce the work (code, data, random seeds, hyperparameters, compute, environment, pretrained models).
+
+Critical appraisal: for each paper provide strengths, weaknesses, assumptions, likely failure modes, and possible biases. State whether the claims are convincing and why.
+
+Practical guidance: give implementation tips (recommended libraries, approximate runtime & memory complexity, code structure), common pitfalls to avoid, and short starter pseudocode or a high-level code outline.
+
+Connections & further reading: situate the paper in the broader literature (briefly name related directions) and list 3–8 suggested follow-up papers/resources.
+
+Glossary & notation: include a concise glossary of specialized terms and a notation table.
+
+Open questions & exercises: end with 5 concrete research questions or experiments to try and 3 practical exercises (e.g., implement X, reproduce Table Y, modify loss function Z).
+
+Citations & references: when summarizing claims use short inline citations (Author Year). Finish with a simple references list for the papers provided.
+
+Do not use an overly formal tone — stay clear and approachable. Ensure each main heading begins with a short, clear in-word introduction that explains what the section will do and why it matters.
+
+paper content:
+"""
+
 user_prompt_1 = """
 Create a detailed, introductory understandable study note based on the following lecture content, make sure it's well organized, ADD CONTENTT AND DETAIL, and is clear and detailed. Explain key concepts clearly and in words. Do not leave anything out that's in the lecture content. Structured liek a note, not just a list of points. Each section must have a clear, detailed IN WORD INTRODUCTION. Don't use overly academic tone.
 
-Be VERY DETAILED in each of your explanations. You must not leave anything out, that will be helpful to know in an interview. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
+Be VERY DETAILED in each of your explanations. Prefer clear, in-word explanations over brevity. Use emojis in main headings for clarity. Number main headings like ## 1. [Emoji] Heading. Use between 3 - 10 main headings as needed. Don't use too many sub headings.
 
 lecture content:
 """
@@ -117,8 +159,8 @@ Hence, create a complete comprehensive lecture that is well structured and clear
 Your task is to narrate the lecture in natural language spoken paragraph form. Don't prefix of suffix it with anything, just the lecture. Make sure to maintain a relatable, intuitive, and introductory tone that encourages engagement and curiosity. Don't use overly flowery language. Don't include raw formulas or equations.
 """
 
-user_prompt_3 = """
-Hence, write 20 multiple choice questions that comprehensively cover this topic (each question having ONE OR MORE CORRECT answer). Don't mark answers. Make sure to cover all the key concepts and ideas in the lecture content. Each question should be clear and concise. Include TRICKY and DIFFICULT questions. Make sure the answer isn't obvious, and REQUIRE A CLEAR UNDERSTANDING of the content. No need to say like "according to the lecture", as it is implied. Use the following format.
+user_prompt_3 = f"""
+Hence, write {NUM_QUESTIONS} multiple choice questions that comprehensively cover this content (each question having ONE OR MORE CORRECT answer). Don't mark answers. Make sure to cover all the key concepts and ideas in the lecture content, focusing on the core testable material. Each question should be clear and concise. Include TRICKY and DIFFICULT questions. Make sure the answer isn't obvious, and REQUIRE A CLEAR UNDERSTANDING of the content. No need to say like "according to the lecture", as it is implied. Use the following format.
 
 ### X. [Question]
 A)
@@ -250,7 +292,7 @@ def extract_sections(md_text):
     extract("title", "## ", r"\n\n", apply_unclean=False)
     extract("questions", "## Questions\n\n")
     extract("answers", "## Answers\n\n")
-    extract("key_points", "### Key Points\n\n")
+    extract("key_points", "## Key Points\n\n")
     extract("study_notes", "## Study Notes\n\n")
 
     return sections
@@ -258,7 +300,7 @@ def extract_sections(md_text):
 def process_file(filepath):
     filename = os.path.basename(filepath)
     # Handle both regular files (e.g., "01 File.md") and q-prefixed files (e.g., "q 01 File.md")
-    match = re.match(r"(?:q\s+)?(\d+)", filename)
+    match = re.match(r"(?:q\s*)?(\d+)", filename)
     if not match:
         return None
 

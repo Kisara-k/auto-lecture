@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
 
-from config import system_prompt, guided_system_prompt, interview_prefix, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
+from config import system_prompt, guided_system_prompt, interview_prefix, research_prefix, user_prompt_1, user_prompt_2, user_prompt_3, user_prompt_4, user_prompt_5, clean, model_usage, load_md_to_dict
 from config import MODEL, START, NUM_LECS, GET_TRANSCRIPTS, GET_KEY_POINTS, GET_Q_AND_A, TRY_REUSE_NOTES
 
 # QUALITY_MODEL = "gpt-4.1-mini"
@@ -20,7 +20,7 @@ client = OpenAI(api_key=openai_key)
 total_cost = 0.0
 cost_lock = threading.Lock()
 
-# user_prompt_1 = interview_prefix
+# user_prompt_1 = research_prefix
 
 def generate(messages, model=MODEL, max_retries=120):
     retries = 0
@@ -147,19 +147,23 @@ def process_lecture(lecture):
         
             text_3, _ = generate([
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": lec_prompt_1},
-                {"role": "assistant", "content": text_1},
-                {"role": "user", "content": user_prompt_3},])
+                # {"role": "user", "content": lec_prompt_1},
+                # {"role": "assistant", "content": text_1},
+                # {"role": "user", "content": user_prompt_3},
+                {"role": "user", "content": "Content:" +  "\n\n" +  title + "\n\n" + content + "\n\n" +  user_prompt_3},
+                ])
             
             results["text_3"] = text_3
             
             text_4, _ = generate([
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": lec_prompt_1},
-                {"role": "assistant", "content": text_1},
-                {"role": "user", "content": user_prompt_3},
+                # {"role": "user", "content": lec_prompt_1},
+                # {"role": "assistant", "content": text_1},
+                # {"role": "user", "content": user_prompt_3},
+                {"role": "user", "content": "Content:" +  "\n\n" +  title + "\n\n" + content +"\n\n" + user_prompt_3},
                 {"role": "assistant", "content": text_3},
-                {"role": "user", "content": user_prompt_4},])
+                {"role": "user", "content": user_prompt_4},
+                ])
 
             results["text_4"] = text_4
         
@@ -197,15 +201,13 @@ def process_lecture(lecture):
         t.join()
     
     def strip_leading_number_part(s):
-        # 1. Title -> Title
         parts = s.split(' ', 1)
-        if len(parts) == 2 and parts[1] and parts[1][0].isdigit():
-            sub = parts[1].split(' ', 1)
-            if len(sub) == 2:
-                return sub[1]
-            else:
-                return ''
-        return parts[1] if len(parts) == 2 else s
+        if len(parts) == 2 and parts[0]:
+            pattern = r'^\d+\.'
+            # pattern = r'^\d+'
+            if re.match(pattern, parts[0]):
+                return parts[1]
+        return s
 
     safe_title = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', title)
     filename_title = strip_leading_number_part(safe_title)
