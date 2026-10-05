@@ -58,7 +58,7 @@ def insert_period_after_title_match(title, content, max_scan=None, start_offset=
             return content[:i] + '.' + content[i:]
     return content
 
-def remove_capital(text, min_length=4):
+def remove_capital(text, min_length=4, terminator='.', lowercase=True):
     # Matches all uppercase blocks including internal spaces and any non-period symbols
     # [A-Z] - uppercase letters
     # [^\w\s.] - any character that's not a word character, whitespace, or period
@@ -76,30 +76,35 @@ def remove_capital(text, min_length=4):
         if len(words) == 1 and len(words[0]) == 1 and words[0].isalpha():
             continue
 
-        # Check for trailing single character (letters or symbols except period)
-        has_trailing_single = (len(words) >= 2 and len(words[-1]) == 1 
-                              and words[-1] != '.')
+        # Check for trailing single character (letters or symbols except terminator)
+        has_trailing_single = (
+            len(words) >= 2 and len(words[-1]) == 1
+            and words[-1] != terminator
+        )
 
         core_words = words[:-1] if has_trailing_single else words
         core_block = ' '.join(core_words)
 
-        # Skip blocks that don't meet min length (excluding spaces and non-letter chars)
-        # We count only alphanumeric characters for length requirement
+        # Apply lowercase conversion only to the core block.
+        if lowercase:
+            core_block = core_block.lower()
+
+        # Skip blocks that don't meet min length
         if len(re.sub(r'[^A-Za-z0-9]', '', core_block)) <= min_length:
             continue
 
         # Build the replacement block
-        replacement = core_block + '.'
+        replacement = core_block + terminator
         if has_trailing_single:
             replacement += ' ' + words[-1]
 
         # Check the char after the match
         char_after = text[end] if end < len(text) else ''
-        if char_after == '.':
-            replacement = replacement.rstrip('.')
+        if char_after == terminator:
+            replacement = replacement.rstrip(terminator)
 
         # Add space if needed
-        if end >= len(text) or text[end] not in [' ', '.']:
+        if end >= len(text) or text[end] not in [' ', terminator]:
             replacement += ' '
 
         # Append unchanged text + replacement
