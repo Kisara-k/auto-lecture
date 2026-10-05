@@ -8,6 +8,8 @@ from difflib import SequenceMatcher
 INPUT_PDF = 'Lectures.pdf'
 OUTPUT_JSON = 'Lectures.json'
 
+LOG = False
+
 def extract_clean_paragraphs(text):
 
     def filter_lines_with_three_letters(text_block):
@@ -140,27 +142,26 @@ def normalize_text(text):
     return text
 
 
-def is_similar_content(prev_content, current_content, similarity_threshold=1):
+def content_containment_ratio(candidate_content, container_content):
+    if not candidate_content or not container_content:
+        return 0.0
 
-    if not prev_content or not current_content:
-        return False
-        
-    # If one is significantly longer than the other, they're not similar
-    len_ratio = min(len(prev_content), len(current_content)) / max(len(prev_content), len(current_content))
-    if len_ratio < 0.8:  # More than 20% length difference
-        return False
-    
-    # If they are exactly the same
-    if prev_content.strip() == current_content.strip():
-        return True
+    candidate = re.sub(r'\s+', ' ', candidate_content).strip().casefold()
+    container = re.sub(r'\s+', ' ', container_content).strip().casefold()
 
-    if similarity_threshold >= 1:
-        return False
-    
-    # Calculate similarity using sequence matching
-    similarity = SequenceMatcher(None, prev_content, current_content).ratio()
-    
-    return similarity >= similarity_threshold
+    if len(candidate) > len(container):
+        return 0.0
+
+    if candidate in container:
+        return 1.0
+
+    matcher = SequenceMatcher(None, candidate, container, autojunk=False)
+    matched_characters = sum(block.size for block in matcher.get_matching_blocks())
+    return matched_characters / len(candidate)
+
+
+def is_content_contained(candidate_content, container_content, similarity_threshold=0.98):
+    return content_containment_ratio(candidate_content, container_content) >= similarity_threshold
 
 def extract_all_toc_entries_with_content(pdf_path):
     doc = fitz.open(pdf_path)
@@ -200,24 +201,53 @@ def extract_all_toc_entries_with_content(pdf_path):
         next_start = toc_flat[i + 1]["start_page"] if i + 1 < len(toc_flat) else len(doc) + 1
         current["end_page"] = next_start - 1
 
-        chapter_text = ""
-        previous_page_content = None
+        chapter_pages = []
         
         for page_num in range(current["start_page"], next_start):
             page = doc.load_page(page_num - 1)
             current_page_text = page.get_text()
             current_page_cleaned = extract_clean_paragraphs(current_page_text)
-            
-            # Skip if this page is very similar to the previous page
-            if previous_page_content and is_similar_content(previous_page_content, current_page_cleaned):
-                continue
-                
-            chapter_text += current_page_text
-            previous_page_content = current_page_cleaned
+
+            if chapter_pages:
+                previous_page_number, previous_page_text, previous_page_cleaned = chapter_pages[-1]
+                previous_in_current = content_containment_ratio(
+                    previous_page_cleaned,
+                    current_page_cleaned
+                )
+                current_in_previous = content_containment_ratio(
+                    current_page_cleaned,
+                    previous_page_cleaned
+                )
+
+                dropped_page_number = None
+                if is_content_contained(previous_page_cleaned, current_page_cleaned):
+                    chapter_pages[-1] = (page_num, current_page_text, current_page_cleaned)
+                    dropped_page_number = previous_page_number
+                elif is_content_contained(current_page_cleaned, previous_page_cleaned):
+                    dropped_page_number = page_num
+                else:
+                    chapter_pages.append((page_num, current_page_text, current_page_cleaned))
+
+                if LOG:
+                    dropped_message = (
+                        f"  |  drop {dropped_page_number}"
+                        if dropped_page_number is not None
+                        else ""
+                    )
+                    print(
+                        f"Pages {previous_page_number:>2} -> {page_num:>2}:  "
+                        f"-> {previous_in_current * 100:6.2f}  |  "
+                        f"<- {current_in_previous * 100:6.2f}"
+                        f"{dropped_message}"
+                    )
+            else:
+                chapter_pages.append((page_num, current_page_text, current_page_cleaned))
+
+        chapter_text = ''.join(page_text for _, page_text, _ in chapter_pages)
 
         cleaned_content = extract_clean_paragraphs(chapter_text)
         fixed_content = insert_period_after_title_match(current["title"], cleaned_content)
-        fixed_content = normalize_text(fixed_content)  # <-- Capital letters fix
+        fixed_content = normalize_text(fixed_content)
         current["content"] = fixed_content
 
     for entry in toc_entries:
